@@ -153,7 +153,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, getDocs, query, where } 
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === 🔥 FIREBASE CONFIG ===
+// === 🔥 CONFIG FIREBASE ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -166,90 +166,55 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// === 🏷️ LÍNEAS Y CATEGORÍAS ===
-const categoriasPorLinea = {
-  "REYMA": [
-    "PLATO", "VASO", "CHAROLA", "CONTENEDOR", "TAPA", "COLOR", "NEGRO"
-  ],
-  "REYMA CHAROLA": [
-    "BIO", "TERMICA", "COLORES"
-  ],
-  "BIOPLAST": [
-    "BIO", "ECO", "TINAJITA"
-  ],
-  "JAGUAR": [
-    "PLATO", "VASO", "JUGUERO"
-  ],
-  "LIQUIDO": [
-    "BIG", "CIFRUT", "AGUA", "CHECHIFRESCO"
-  ],
-  "CONVERMEX": [
-    "VASO", "TAPA", "ENVASE"
-  ],
-  "BOLSAS PLASTICAS": [
-    "CAMISETA", "PLANA", "ROLLO", "CIMAPLAST"
-  ]
-};
+let productos = [];
+let lineasUnicas = [];
 
-// === 🟦 MOSTRAR CATEGORÍAS ===
-function mostrarCategorias(linea) {
-  document.getElementById("pantalla").style.display = "none";
-  const lista = document.getElementById("listaCategorias");
-  lista.innerHTML = "";
-  categoriasPorLinea[linea].forEach(cat => {
+// === 🧩 CARGAR LÍNEAS SOLO DE INVENTARIO INICIAL ===
+async function cargarLineas() {
+  const contenedor = document.getElementById("pantalla");
+  const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
+  const q = query(colRef, where("tipoMovimiento", "==", "entrada_inicial"));
+  const snap = await getDocs(q);
+
+  productos = [];
+  lineasUnicas = [];
+
+  snap.forEach(doc => {
+    const p = doc.data();
+    if (p.linea && p.descripcion && p.codigo) {
+      productos.push(p);
+      if (!lineasUnicas.includes(p.linea)) lineasUnicas.push(p.linea);
+    }
+  });
+
+  // limpiar tarjetas previas
+  contenedor.querySelectorAll(".tarjeta").forEach(x => x.remove());
+
+  // generar tarjetas dinámicas por línea
+  lineasUnicas.sort().forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
-    div.textContent = cat;
-    div.onclick = () => mostrarProductos(linea, cat);
-    lista.appendChild(div);
+    div.textContent = linea;
+    div.onclick = () => mostrarProductos(linea);
+    contenedor.appendChild(div);
   });
-  document.getElementById("tituloCategoria").textContent = `Categorías de ${linea}`;
-  document.getElementById("categorias").style.display = "block";
 }
 
-async function mostrarProductos(linea, categoria) {
-  document.getElementById("categorias").style.display = "none";
+// === 🧾 MOSTRAR PRODUCTOS POR LÍNEA ===
+function mostrarProductos(linea) {
+  document.getElementById("pantalla").style.display = "none";
   const lista = document.getElementById("listaProductos");
-  lista.innerHTML = "<p>Cargando productos...</p>";
-
-  const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
-  const q = query(colRef, where("linea", "==", linea));
-  const snap = await getDocs(q);
-  const allSnap = await getDocs(colRef);
-
   lista.innerHTML = "";
 
-  const encontrados = new Set();
+  const filtrados = productos.filter(p => p.linea === linea);
 
-  // Primero los que sí tienen el campo "linea"
-  snap.forEach(docSnap => {
-    const p = docSnap.data();
-    if (!p.descripcion) return;
-    const desc = p.descripcion.toUpperCase();
-    if (desc.includes(categoria.toUpperCase())) {
-      crearTarjetaProducto(lista, p);
-      encontrados.add(p.codigo);
-    }
-  });
+  filtrados.forEach(p => crearTarjetaProducto(lista, p));
 
-  // Luego buscar entre todos los que no tienen "linea"
-  allSnap.forEach(docSnap => {
-    const p = docSnap.data();
-    if (!p.descripcion) return;
-    const desc = p.descripcion.toUpperCase();
-    if (!p.linea && (desc.includes(linea.toUpperCase()) || desc.includes(categoria.toUpperCase()))) {
-      if (!encontrados.has(p.codigo)) {
-        crearTarjetaProducto(lista, p);
-      }
-    }
-  });
-
-  if (lista.innerHTML === "") lista.innerHTML = "<p>No hay productos en esta categoría.</p>";
-
-  document.getElementById("tituloProductos").textContent = `${linea} - ${categoria}`;
+  document.getElementById("tituloProductos").textContent = linea;
   document.getElementById("productos").style.display = "block";
 }
 
+// === 🎴 CREAR TARJETA DE PRODUCTO ===
 function crearTarjetaProducto(lista, p) {
   const div = document.createElement("div");
   div.className = "producto";
@@ -287,13 +252,16 @@ function confirmarCantidad() {
   window.location.href = "pantalla3.html";
 }
 
-// === 🌍 Exponer funciones para HTML ===
-window.mostrarCategorias = mostrarCategorias;
+// === 🌍 EXPONER FUNCIONES ===
 window.mostrarProductos = mostrarProductos;
 window.agregarCantidad = agregarCantidad;
 window.cerrarPopup = cerrarPopup;
 window.confirmarCantidad = confirmarCantidad;
+
+// === 🚀 INICIO AUTOMÁTICO ===
+cargarLineas();
 </script>
 </body>
 </html>
+
 
