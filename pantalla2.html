@@ -201,8 +201,8 @@ async function mostrarProductos(linea, categoria) {
   const lista = document.getElementById("listaProductos");
   lista.innerHTML = "<p>Cargando productos...</p>";
 
-  const q = query(collection(db, "almacenes", "almacen_zapata", "entradas"), where("linea", "==", linea));
-  const snap = await getDocs(q);
+const q = collection(db, "almacenes", "almacen_zapata", "entradas");
+const snap = await getDocs(q);
   lista.innerHTML = "";
 
   if (snap.empty) {
@@ -263,6 +263,7 @@ window.confirmarCantidad = confirmarCantidad;
 </script>
 </body>
 </html>
+
 
 
 
