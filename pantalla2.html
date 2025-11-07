@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -151,344 +151,102 @@
     © 2025 Proveedora de Desechables Zapata · Sistema de Inventario · Desarrollado por Adm Sistemas
   </footer>
 
-  <script>
-   const categoriasPorLinea = {
-  REYMA: ['CHAROLA', 'CONTENEDOR', 'VASOS PLASTICO','PLATOS TERMICOS','CHAROLAS COLORES','CONTENEDORES NEGROS','VASOS TERMICOS','LINEA EU','POPOTE BIO'],
-  BIOPLAST: ['BIO CONTENEDOR', 'BIO CHAROLA','LINEA BIO'],
-  JAGUAR: ['JAGUAR Y JUGUERO'],// ✅ corregido
-  BIGCOLA: ['REFRESCOS'],            // 🟢 ya estaba bien
-  CONVERMEX: ['VASOS'],
-  BOLSASPLASTICAS: ['CAMISETA', 'BOLSA_CAMISETA', 'BOLSA_PLANA', 'BOLSA_ROLLO', 'CIMAPLAST'],
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } 
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
+  authDomain: "inventariopv-643f1.firebaseapp.com",
+  projectId: "inventariopv-643f1",
+  storageBucket: "inventariopv-643f1.firebasestorage.app",
+  messagingSenderId: "96242533231",
+  appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
 };
 
-const productosPorCategoria = {
-  'CHAROLA': [
-    { nombre: "CH855RE", codigo: "365" },
-    { nombre: "CH066RE", codigo: "355" },
-    { nombre: "CH007", codigo: "357" },
-    { nombre: "CH835", codigo: "364" },
-    { nombre: "CH105", codigo: "363" },
-    { nombre: "CH1014", codigo: "7037" },
-    { nombre: "CH9H", codigo: "2178" },
-    { nombre: "CH8S", codigo: "14578" },
-    { nombre: "CH855MA", codigo: "7016" },
-    { nombre: "CH066MA", codigo: "7221" },
-    { nombre: "LAMINADO POLIPAPEL 5K", codigo: "17502208803037" }
-  ],
-  'CONTENEDOR': [
-    { nombre: "CN7X7D4P", codigo: "7689" },
-    { nombre: "CN7X7L4P", codigo: "7686" },
-    { nombre: "CN8X8D4P", codigo: "2096" },
-    { nombre: "CN8X8L4P", codigo: "1886" },
-    { nombre: "CN9X9D4P", codigo: "2097" },
-    { nombre: "CN9X9L4P", codigo: "1655" },
-    { nombre: "CNH10P (HAM)", codigo: "1901" },
-    { nombre: "CNHD (HOT DOG)", codigo: "7417" },
-    { nombre: "CNHO (HOGIE)", codigo: "352" }
-  ],
-  'PLATOS TERMICOS': [
-    { nombre: "PH4", codigo: "12146" },
-    { nombre: "PH6", codigo: "2409" },
-    { nombre: "PH8", codigo: "2410" },
-    { nombre: "PH10", codigo: "020013" },
-    { nombre: "PT006", codigo: "2411" },
-    { nombre: "PT9D", codigo: "2188" },
-    { nombre: "PT8D", codigo: "2408" },
-    { nombre: "PT8L", codigo: "2190" },
-    { nombre: "PT10D", codigo: "3987" },
-    { nombre: "PT10L", codigo: "3614" }
-  ],
-  'CHAROLAS COLORES': [
-    { nombre: "CH855AM", codigo: "1347" },
-    { nombre: "CH855NE", codigo: "020124" },
-    { nombre: "CH855RS", codigo: "020126" },
-    { nombre: "CH855AZUL", codigo: "020127" },
-    { nombre: "CH855RJ", codigo: "020053" },
-    { nombre: "CH007AZUL", codigo: "2351" },
-    { nombre: "CH007AM", codigo: "1349" },
-    { nombre: "CH007NE", codigo: "055500500" },
-    { nombre: "CH007RS", codigo: "2350" },
-    { nombre: "CH007RJ", codigo: "450029" },
-    { nombre: "CH9HAM", codigo: "3864" },
-    { nombre: "CH9HNE", codigo: "021788" },
-    { nombre: "CH9HRS", codigo: "021788" },
-    { nombre: "CH9HAZUL", codigo: "3866" },
-    { nombre: "CH9HRJ", codigo: "3865" },
-    { nombre: "CH066AM", codigo: "3738" },
-    { nombre: "CH8SNEGRA", codigo: "14579" }
-  ],
-  'CONTENEDORES NEGROS': [
-    { nombre: "CN7X7LNE", codigo: "1020321" },
-    { nombre: "CN7X7DNE", codigo: "020270" },
-    { nombre: "CN8X8DNE", codigo: "1450066" },
-    { nombre: "CN8X8LNE", codigo: "450065" },
-    { nombre: "CN9X9DNE", codigo: "1750178" },
-    { nombre: "CN9X9LNE", codigo: "750178" },
-    { nombre: "CGHAMNEGRA", codigo: "750182" }
-  ],
-  'VASOS PLASTICO': [
-    { nombre: "VP4A", codigo: "020167" },
-    { nombre: "VP4CH", codigo: "020262" },
-    { nombre: "VP55A", codigo: "2397" },
-    { nombre: "VP51/2", codigo: "2161" },
-    { nombre: "VP6", codigo: "2162" },
-    { nombre: "VP7", codigo: "5853" },
-    { nombre: "VP8", codigo: "4410" },
-    { nombre: "VP10", codigo: "5078" },
-    { nombre: "VP12", codigo: "1502" },
-    { nombre: "VP14", codigo: "1623" },
-    { nombre: "VP16A", codigo: "4395" },
-    { nombre: "VP16L", codigo: "1386413864" },
-    { nombre: "ENV1LT", codigo: "020066" },
-    { nombre: "ENV1/2LT", codigo: "5666" },
-    { nombre: "ENV1/4LT", codigo: "450083" },
-    { nombre: "TAPA REY (TR) VP", codigo: "020183" }
-  ],
-  'VASOS TERMICOS': [
-    { nombre: "VT4A", codigo: "020073" },
-    { nombre: "VT4CH", codigo: "7562" },
-    { nombre: "VT6", codigo: "450006" },
-    { nombre: "VT8", codigo: "7560" },
-    { nombre: "VT8A", codigo: "450010" },
-    { nombre: "VT10", codigo: "450007" },
-    { nombre: "VT12", codigo: "7011" },
-    { nombre: "VT12A", codigo: "020339" },
-    { nombre: "VT14", codigo: "450008" },
-    { nombre: "VT16", codigo: "7013" },
-    { nombre: "VT1/2LT", codigo: "" },
-    { nombre: "VT1LT", codigo: "" }
-  ],
-  'LINEA EU': [
-    { nombre: "VP10EU", codigo: "450091" },
-    { nombre: "VP12EU", codigo: "450090" },
-    { nombre: "VP14EU", codigo: "141450" },
-    { nombre: "VP16EU", codigo: "450086" },
-    { nombre: "VP32EU", codigo: "450087" },
-    { nombre: "TPEUR (RANURA)", codigo: "450101" },
-    { nombre: "TPEU (LISA)", codigo: "450101" },
-    { nombre: "TPDEU (DOMO)", codigo: "450101" },
-    { nombre: "TP32EUR (RANURA)", codigo: "450095" },
-    { nombre: "TP32EU (LISA)", codigo: "450095" },
-    { nombre: "TPD16 EU", codigo: "32322050" }
-  ],
-  'POPOTE BIO': [
-    { nombre: "ESTUCH 21 BIO 4/500", codigo: "450079" },
-    { nombre: "ESTUCH 26 BIO 4/500", codigo: "450081" }
-  ],
-  'LINEA BIO': [
-    { nombre: "CH066MABIO", codigo: "020319" },
-    { nombre: "CH855MABIO", codigo: "020318" },
-    { nombre: "CN7X7L4PBIO", codigo: "020297" },
-    { nombre: "CN7X7D4PBIO", codigo: "020306" },
-    { nombre: "CN8X8L4PBIO", codigo: "020303" },
-    { nombre: "CN8X8D4PBIO", codigo: "020300" },
-    { nombre: "CN9X9D4PBIO", codigo: "020312" },
-    { nombre: "CN9X9L4PBIO", codigo: "020310" },
-    { nombre: "CNH10PBIO", codigo: "450089" },
-    { nombre: "CH835BIO", codigo: "" },
-    { nombre: "CH007BIO", codigo: "450100" },
-    { nombre: "CH855REBIO", codigo: "" },
-    { nombre: "CH9HBIO", codigo: "" },
-    { nombre: "PT9DBIO", codigo: "" },
-    { nombre: "PT8LBIO", codigo: "" },
-    { nombre: "PT8DBIO", codigo: "" }
-  ],
-  'BIO CONTENEDOR': [
-    { nombre: "CN7X7L4PBIO TINAJITA", codigo: "7701200" },
-    { nombre: "CN7X7D4PBIO TINAJITA", codigo: "7702200" },
-    { nombre: "CN8X8D4PBIO TINAJITA", codigo: "8802200" },
-    { nombre: "CN8X8L4PBIO TINAJITA", codigo: "8801200" },
-    { nombre: "CN9X9D4PBIO TINAJITA", codigo: "9902200" },
-    { nombre: "CN9X9L4PBIO TINAJITA", codigo: "9901200" }
-  ],
-  'BIO CHAROLA': [
-    { nombre: "CH066MABIO TINAJITA CREMA", codigo: "" },
-    { nombre: "CH855MABIO TINAJITA CREMA", codigo: "" },
-    { nombre: "CH066MABIO TINAJITA BLANCA", codigo: "" },
-    { nombre: "CH855MABIO TINAJITA BLANCA", codigo: "" }
-  ],
-  'JAGUAR Y JUGUERO': [
-    { nombre: "PT 9D", codigo: "020051" },
-    { nombre: "PT 8L", codigo: "020054" },
-    { nombre: "CH855", codigo: "2033" },
-    { nombre: "CH066", codigo: "2164" },
-    { nombre: "PT 6 PASTELERO", codigo: "020053" },
-    { nombre: "VP10", codigo: "1484" },
-    { nombre: "VP 5 1/2", codigo: "2161" },
-    { nombre: "VP 8", codigo: "1639" },
-    { nombre: "VP 6", codigo: "2162" },
-    { nombre: "PT PH6", codigo: "020051" },
-    { nombre: "PT PH8", codigo: "020052" },
-    { nombre: "PT 8 DIV", codigo: "020055" },
-    { nombre: "JUGUERO MEDIO", codigo: "1356" },
-    { nombre: "JUGUERO 1L", codigo: "1355" },
-    { nombre: "TAP P/ENV JUGUERO", codigo: "290005" },
-    { nombre: "PH 8", codigo: "020052" },
-    { nombre: "VP 12", codigo: "1409" },
-    { nombre: "VP 16B", codigo: "1486" },
-    { nombre: "VP 14", codigo: "1485" },
-    { nombre: "VP 16ALT", codigo: "450053" },
-    { nombre: "PT10 1/4 DIV", codigo: "450002" }
-  ],
-  'REFRESCOS': [
-    { nombre: "BIG COLA 3 LITROS", codigo: "060028" },
-    { nombre: "BIG COLA 1.5", codigo: "4451" },
-    { nombre: "BIG COLA 500 ML", codigo: "250010" },
-    { nombre: "CIFRUT 3.3", codigo: "7506241" },
-    { nombre: "CIFRUT 625", codigo: "210010" },
-    { nombre: "CIFRUT 300 MANZANA", codigo: "7504033" },
-    { nombre: "CIFRUT 300 NARANJA ", codigo: "7503034" },
-    { nombre: "CIFRUT 300 UVA", codigo: "7505035" },
-    { nombre: "BIG COLA 300", codigo: "14220" },
-    { nombre: "AGUA 500ML", codigo: "3062" },
-    { nombre: "AGUA 1.5L", codigo: "2382" },
-    { nombre: "AGUA 1L", codigo: "3217" },
-    { nombre: "CHECHIFRESCO 140ML", codigo: "210004" },
-    { nombre: "AGUA 6L", codigo: "7503000134803" },
-    { nombre: "AGUA 10L", codigo: "7503000134506" }
-  ],
-  'VASOS': [
-    { nombre: "V104", codigo: "104104" },
-    { nombre: "V106", codigo: "106106" },
-    { nombre: "V108", codigo: "108108" },
-    { nombre: "V110", codigo: "110110" },
-    { nombre: "V112", codigo: "112112" },
-    { nombre: "V114", codigo: "114114" },
-    { nombre: "V116", codigo: "116116" },
-    { nombre: "V132", codigo: "132132" },
-    { nombre: "ENV704", codigo: "704704" },
-    { nombre: "ENV706", codigo: "706706" },
-    { nombre: "ENV708", codigo: "708708" },
-    { nombre: "ENV712", codigo: "712712" },
-    { nombre: "ENV716", codigo: "716716" },
-    { nombre: "ENV732", codigo: "732732" },
-    { nombre: "ENV760", codigo: "760760" },
-    { nombre: "TP404", codigo: "404404" },
-    { nombre: "TP406", codigo: "406406" },
-    { nombre: "TP408", codigo: "408408" },
-    { nombre: "TP410", codigo: "410410" },
-    { nombre: "TP412", codigo: "412412" },
-    { nombre: "TP414", codigo: "414414" },
-    { nombre: "TP416", codigo: "416416" },
-    { nombre: "TP516", codigo: "516516" },
-    { nombre: "V120", codigo: "120120" },
-    { nombre: "HIELERA CH", codigo: "7501431206038" },
-    { nombre: "HIELERA MED", codigo: "7501825638728" },
-    { nombre: "HIELERA GRAD", codigo: "7501825638742" },
-    { nombre: "HIELERA AUTOESTI C/5", codigo: "" },
-    { nombre: "TORTILLERO", codigo: "020103" },
-    { nombre: "CH855", codigo: "5283" },
-    { nombre: "CH066", codigo: "5282" }
-  ],
-  
-  'CAMISETA': [
-  { nombre: "CAMISETA MEDIANA NEGRA BD", codigo: "4660" },
-  { nombre: "CAMISETA CHICA BD NEGRA", codigo: "7702" },
-  { nombre: "CAMISETA GRANDE BD NEGRA", codigo: "13609" },
-  { nombre: "CAMISETA MINI POLIPALPEL BIODEGRADABLE", codigo: "150100" },
-  { nombre: "CAMISETA GRANDE POLIPALPEL AD BIO", codigo: "150103" },
-  { nombre: "CAMISETA EXTRA GRANDE ALTA DENC", codigo: "150104" },
-  { nombre: "CAMISETA CHICA POLISEDA", codigo: "7503009154239" },
-  { nombre: "CAMISETA MEDIANA POLISEDA", codigo: "7503009154246" },
-  { nombre: "CAMISETA MINI POLISEDA VALLADOLID", codigo: "7503024644128" },
-  { nombre: "CAMISETA GRANDE POLISEDA BIO", codigo: "7503024644951" }
-],
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-'BOLSA_CAMISETA': [
-  { nombre: "BOLSA CAMISETA CHICA POLIPALPEL BIO", codigo: "150101" },
-  { nombre: "BOLSA CAMISETA MEDIANA POLIPALPEL BIO", codigo: "150102" }
-],
-
-'BOLSA_PLANA': [
-  { nombre: "BOLSA PLANA 18X26", codigo: "141826" },
-  { nombre: "BOLSA PLANA 15X20", codigo: "141520" },
-  { nombre: "BOLSA PLANA 25X35", codigo: "142535" },
-  { nombre: "BOLSA PLANA 25X40", codigo: "142540" },
-  { nombre: "BOLSA PLANA 30X50", codigo: "143050" },
-  { nombre: "BOLSA PLANA 40X60", codigo: "144060" },
-  { nombre: "BOLSA PLANA 50X70", codigo: "145070" },
-  { nombre: "BOLSA PLANA 60x90", codigo: "146090" },
-  { nombre: "BOLSA PLANA 70X90", codigo: "147090" },
-  { nombre: "BOLSA PLANA 90X120", codigo: "1490120" },
-  { nombre: "BOLSA PLANA 20X30", codigo: "142030" }
-],
-
-'BOLSA_ROLLO': [
-  { nombre: "BOLSA DE ROLLO 18X25 ALTA DENCIDAD", codigo: "131825" },
-  { nombre: "BOLSA DE ROLLO 18X26 ALTA DENCIDAD", codigo: "7508302464425" },
-  { nombre: "BOLSA DE ROLLO 20X30 ALTA DENCIDAD", codigo: "132030" },
-  { nombre: "BOLSA DE ROLLO 25X40 ALTA DENCIDAD", codigo: "75083028174263" },
-  { nombre: "BOLSA DE ROLLO 40X60 ALTA DENCIDAD", codigo: "134060" }
-],
-
-'CIMAPLAST': [
-  { nombre: "BOLSA CIMAPLAS 10X20 NAT CAL. 150", codigo: "7501508800237" }
-]
+const categoriasPorLinea = {
+  REYMA: ['CHAROLA', 'CONTENEDOR', 'PLATO', 'VASO', 'CHAROLAS COLORES', 'CONTENEDORES NEGROS'],
+  BIOPLAST: ['BIO', 'ECO', 'TINAJITA'],
+  JAGUAR: ['JUGUERO', 'JAGUAR'],
+  LIQUIDOS: ['BIG', 'CIFRUT', 'AGUA'],
+  CONVERMEX: ['VASO'],
+  'BOLSAS PLASTICAS': ['BOLSA', 'CAMISETA']
 };
-    let productoSeleccionado = null;
 
-    function mostrarCategorias(linea) {
-      document.getElementById("pantalla").style.display = "none";
-      const lista = document.getElementById("listaCategorias");
-      lista.innerHTML = '';
-      categoriasPorLinea[linea].forEach(cat => {
-        const div = document.createElement('div');
-        div.className = 'tarjeta';
-        div.textContent = cat;
-        div.onclick = () => mostrarProductos(cat);
-        lista.appendChild(div);
-      });
-      document.getElementById("tituloCategoria").textContent = `Categorías de ${linea}`;
-      document.getElementById("categorias").style.display = "block";
-    }
+function mostrarCategorias(linea) {
+  document.getElementById("pantalla").style.display = "none";
+  const lista = document.getElementById("listaCategorias");
+  lista.innerHTML = "";
+  categoriasPorLinea[linea].forEach(cat => {
+    const div = document.createElement("div");
+    div.className = "tarjeta";
+    div.textContent = cat;
+    div.onclick = () => mostrarProductos(linea, cat);
+    lista.appendChild(div);
+  });
+  document.getElementById("tituloCategoria").textContent = `Categorías de ${linea}`;
+  document.getElementById("categorias").style.display = "block";
+}
 
-    function mostrarProductos(categoria) {
-      document.getElementById("categorias").style.display = "none";
-      const lista = document.getElementById("listaProductos");
-      lista.innerHTML = '';
-      productosPorCategoria[categoria].forEach(prod => {
-        const div = document.createElement('div');
-        div.className = 'producto';
-        div.textContent = `${prod.nombre} (Código: ${prod.codigo})`;
-        div.onclick = () => agregarCantidad(prod.nombre, prod.codigo);
-        lista.appendChild(div);
-      });
-      document.getElementById("tituloProductos").textContent = `Productos - ${categoria}`;
-      document.getElementById("productos").style.display = "block";
-    }
+async function mostrarProductos(linea, categoria) {
+  document.getElementById("categorias").style.display = "none";
+  const lista = document.getElementById("listaProductos");
+  lista.innerHTML = "<p>Cargando productos...</p>";
 
-    function agregarCantidad(nombre, codigo) {
-      productoSeleccionado = { nombre, codigo };
-      document.getElementById("nombreProductoSeleccionado").textContent = nombre;
-      document.getElementById("inputCantidad").value = '';
-      document.getElementById("popupCantidad").style.display = "block";
-    }
+  const q = query(collection(db, "almacenes", "almacen_zapata", "entradas"), where("linea", "==", linea));
+  const snap = await getDocs(q);
+  lista.innerHTML = "";
 
-    function cerrarPopup() {
-      document.getElementById("popupCantidad").style.display = "none";
+  snap.forEach(docSnap => {
+    const p = docSnap.data();
+    if (p.descripcion.toUpperCase().includes(categoria.toUpperCase())) {
+      const div = document.createElement("div");
+      div.className = "producto";
+      div.textContent = `${p.descripcion} (Stock: ${p.cantidad})`;
+      div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
+      lista.appendChild(div);
     }
+  });
+
+  document.getElementById("tituloProductos").textContent = `${linea} - ${categoria}`;
+  document.getElementById("productos").style.display = "block";
+}
+
+// === Popup y carrito ===
+let productoSeleccionado = null;
+
+function agregarCantidad(nombre, codigo) {
+  productoSeleccionado = { nombre, codigo };
+  document.getElementById("nombreProductoSeleccionado").textContent = nombre;
+  document.getElementById("inputCantidad").value = '';
+  document.getElementById("popupCantidad").style.display = "block";
+}
+
+function cerrarPopup() {
+  document.getElementById("popupCantidad").style.display = "none";
+}
+
 function confirmarCantidad() {
   const cantidad = parseInt(document.getElementById("inputCantidad").value);
-  if (!isNaN(cantidad) && cantidad > 0) {
-    const nombre = productoSeleccionado.nombre;
-    const codigo = productoSeleccionado.codigo;
+  if (isNaN(cantidad) || cantidad <= 0) return alert("Cantidad inválida.");
 
-    // Guardar producto en carrito (localStorage)
-    let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-    carrito.push({ nombre, codigo, cantidad });
-    localStorage.setItem("carrito", JSON.stringify(carrito));
+  const nombre = productoSeleccionado.nombre;
+  const codigo = productoSeleccionado.codigo;
+  let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  carrito.push({ nombre, codigo, cantidad });
+  localStorage.setItem("carrito", JSON.stringify(carrito));
 
-    cerrarPopup();
-
-    // ✅ Redirige directamente al carrito (pantalla3.html)
-    window.location.href = "pantalla3.html";
-  } else {
-    alert("Ingresa una cantidad válida.");
-  }
+  cerrarPopup();
+  window.location.href = "pantalla3.html";
 }
-  </script>
+</script>
 </body>
 </html>
+
 
 
 
