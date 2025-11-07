@@ -151,11 +151,17 @@ window.addEventListener("resize", redimensionarCanvas);
       ctx.beginPath();
     }
 
-    function guardar() {
-      const firma = canvas.toDataURL("image/png");
-      localStorage.setItem("firmaRecibe", firma);
-      window.location.href = "pantalla6.html";
-    }
+function guardar() {
+  const firma = canvas.toDataURL("image/png");
+  localStorage.setItem("firmaRecibe", firma);
+
+  // ✅ Marca que se debe pedir el folio de cincho al abrir el resumen
+  localStorage.setItem("solicitarCincho", "true");
+
+  // Ir al resumen
+  window.location.href = "pantalla6.html";
+}
   </script>
 </body>
 </html>
+
