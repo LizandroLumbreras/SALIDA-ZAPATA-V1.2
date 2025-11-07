@@ -16,18 +16,76 @@
     ul { list-style: none; padding: 0; margin: 10px 0; }
     li { margin-bottom: 10px; background: white; color: black; padding: 10px; border-radius: 5px; }
     button { display: block; margin: 30px auto 0; padding: 12px 20px; font-size: 16px; border: none; border-radius: 8px; background: green; color: white; cursor: pointer; }
-    @media print {
-      body { margin-top: 15px; margin-bottom: 15px; color: black !important; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 14px; }
-      .resumen { width: 280px; margin: auto; padding: 5px 10px; font-size: 18px; background: white; color: black; }
-      .resumen * { color: black !important; background: none !important; }
-      .resumen h2 { margin-top: 10px; font-size: 15px; text-align: center; }
-      ul { padding-left: 10px; }
-      img { max-width: 100%; height: auto; filter: contrast(150%); }
-      .firmas-vertical { display: flex; flex-direction: column; align-items: center; margin-top: 20px; font-size: 12px; }
-      .firmas-vertical div { margin-bottom: 20px; width: 100%; text-align: center; }
-      .firmas-vertical img { width: 90%; max-width: 250px; height: 60px; border: 1px solid #000; border-radius: 4px; filter: contrast(180%) brightness(1.2); }
-      button, .no-print { display: none !important; }
-    }
+@media print {
+  body {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    color: black !important;
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 14px;
+  }
+
+  .resumen {
+    width: 280px;
+    margin: auto;
+    padding: 5px 10px;
+    font-size: 18px;
+    background: white;
+    color: black;
+  }
+
+  .resumen * {
+    color: black !important;
+    background: none !important;
+  }
+
+  .resumen h2 {
+    margin-top: 10px;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  ul {
+    padding-left: 10px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* 🔹 Aumento de nitidez de firmas */
+  .firmas-vertical img {
+    width: 95%;
+    max-width: 260px;
+    height: 70px;
+    border: 1px solid #000;
+    border-radius: 4px;
+    filter: contrast(250%) brightness(1.4) saturate(1.3);
+    image-rendering: crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  .firmas-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+    font-size: 12px;
+  }
+
+  .firmas-vertical div {
+    margin-bottom: 20px;
+    width: 100%;
+    text-align: center;
+  }
+
+  button, .no-print {
+    display: none !important;
+  }
+}
   </style>
 </head>
 <body>
@@ -355,6 +413,7 @@ if (solicitarCincho && !folioCincho) {
 </div>
 </body>
 </html>
+
 
 
 
