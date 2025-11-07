@@ -156,7 +156,14 @@ function confirmarCincho() {
 
   localStorage.setItem("folioCincho", noCamion ? "" : folioCincho);
   cerrarModalCincho();
-  guardarEnFirebase(); // continúa con el flujo normal
+
+  // ✅ Actualizar el resumen visual, pero sin guardar aún
+  document.getElementById("folioCinchoMostrar").textContent =
+    folioCincho && folioCincho.trim() !== ""
+      ? `🚚 Folio de Cincho: ${folioCincho}`
+      : "🚚 Sin folio de cincho registrado";
+
+  alert("✅ Folio de cincho registrado. Ahora puedes imprimir o guardar la salida.");
 }
   async function guardarEnFirebase() {
     await obtenerFolioDesdeFirebase();
@@ -348,6 +355,7 @@ if (solicitarCincho && !folioCincho) {
 </div>
 </body>
 </html>
+
 
 
 
