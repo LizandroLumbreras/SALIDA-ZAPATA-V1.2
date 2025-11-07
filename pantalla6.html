@@ -114,7 +114,7 @@
     <p id="folioCinchoMostrar" style="text-align:center;font-weight:bold;margin-top:20px;"></p>
 
     <button class="no-print" onclick="imprimirYDescargar()" style="background-color:#28a745;">🖨️ Imprimir y Descargar</button>
-    <button class="no-print" onclick="abrirModalCincho()" style="background-color:#007bff;">💾 Guardar salida</button>
+    <button class="no-print" onclick="verificarCinchoYGuardar()" style="background-color:#007bff;">💾 Guardar salida</button>
   </div>
 
   <!-- Firebase SDK -->
@@ -213,16 +213,34 @@ function confirmarCincho() {
   }
 
   localStorage.setItem("folioCincho", noCamion ? "" : folioCincho);
-  cerrarModalCincho();
+cerrarModalCincho();
 
-  // ✅ Actualizar el resumen visual, pero sin guardar aún
-  document.getElementById("folioCinchoMostrar").textContent =
-    folioCincho && folioCincho.trim() !== ""
-      ? `🚚 Folio de Cincho: ${folioCincho}`
-      : "🚚 Sin folio de cincho registrado";
+// ✅ Actualizar el resumen visual
+document.getElementById("folioCinchoMostrar").textContent =
+  folioCincho && folioCincho.trim() !== ""
+    ? `🚚 Folio de Cincho: ${folioCincho}`
+    : "🚚 Sin folio de cincho registrado";
 
+// 🔹 Si la ventana del cincho fue abierta desde 'Guardar salida', continuar guardando
+if (window.guardandoSalida === true) {
+  window.guardandoSalida = false;
+  guardarEnFirebase();
+} else {
   alert("✅ Folio de cincho registrado. Ahora puedes imprimir o guardar la salida.");
 }
+
+function verificarCinchoYGuardar() {
+  const folioCincho = localStorage.getItem("folioCincho");
+
+  // Si no hay cincho, abrir modal y marcar que viene desde guardar
+  if (!folioCincho || folioCincho.trim() === "") {
+    window.guardandoSalida = true;
+    abrirModalCincho();
+  } else {
+    guardarEnFirebase();
+  }
+}
+
   async function guardarEnFirebase() {
     await obtenerFolioDesdeFirebase();
 
@@ -413,6 +431,7 @@ if (solicitarCincho && !folioCincho) {
 </div>
 </body>
 </html>
+
 
 
 
