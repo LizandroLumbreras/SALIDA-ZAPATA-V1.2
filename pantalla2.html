@@ -207,7 +207,6 @@ function mostrarCategorias(linea) {
   document.getElementById("categorias").style.display = "block";
 }
 
-// === 🧩 MOSTRAR PRODUCTOS DESDE FIRESTORE ===
 async function mostrarProductos(linea, categoria) {
   document.getElementById("categorias").style.display = "none";
   const lista = document.getElementById("listaProductos");
@@ -216,29 +215,34 @@ async function mostrarProductos(linea, categoria) {
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
   const q = query(colRef, where("linea", "==", linea));
   const snap = await getDocs(q);
+  const allSnap = await getDocs(colRef);
 
   lista.innerHTML = "";
 
-  if (snap.empty) {
-    // Si no tiene campo línea, usar búsqueda en descripción
-    const allSnap = await getDocs(colRef);
-    allSnap.forEach(docSnap => {
-      const p = docSnap.data();
-      const descripcion = (p.descripcion || "").toUpperCase();
-      if (descripcion.includes(categoria.toUpperCase())) {
+  const encontrados = new Set();
+
+  // Primero los que sí tienen el campo "linea"
+  snap.forEach(docSnap => {
+    const p = docSnap.data();
+    if (!p.descripcion) return;
+    const desc = p.descripcion.toUpperCase();
+    if (desc.includes(categoria.toUpperCase())) {
+      crearTarjetaProducto(lista, p);
+      encontrados.add(p.codigo);
+    }
+  });
+
+  // Luego buscar entre todos los que no tienen "linea"
+  allSnap.forEach(docSnap => {
+    const p = docSnap.data();
+    if (!p.descripcion) return;
+    const desc = p.descripcion.toUpperCase();
+    if (!p.linea && (desc.includes(linea.toUpperCase()) || desc.includes(categoria.toUpperCase()))) {
+      if (!encontrados.has(p.codigo)) {
         crearTarjetaProducto(lista, p);
       }
-    });
-  } else {
-    snap.forEach(docSnap => {
-      const p = docSnap.data();
-      if (!p.descripcion) return;
-      const descripcion = p.descripcion.toUpperCase();
-      if (descripcion.includes(categoria.toUpperCase())) {
-        crearTarjetaProducto(lista, p);
-      }
-    });
-  }
+    }
+  });
 
   if (lista.innerHTML === "") lista.innerHTML = "<p>No hay productos en esta categoría.</p>";
 
@@ -292,3 +296,4 @@ window.confirmarCantidad = confirmarCantidad;
 </script>
 </body>
 </html>
+
