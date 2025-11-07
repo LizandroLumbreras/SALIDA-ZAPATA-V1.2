@@ -1,12 +1,12 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Agregar productos - Zapata</title>
+  <title>Salida de Productos – Zapata</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
       background: linear-gradient(to right, #00416A, #E4E5E6);
       margin: 0;
       padding: 0;
@@ -20,7 +20,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      opacity: 0.2;
+      opacity: 0.15;
       z-index: 0;
       max-width: 80%;
       pointer-events: none;
@@ -31,7 +31,7 @@
       margin: 50px auto;
       padding: 20px;
       background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      border-radius: 12px;
       position: relative;
       z-index: 2;
     }
@@ -44,17 +44,17 @@
     .tarjeta, .producto {
       background: white;
       color: black;
-      padding: 15px 20px;
+      padding: 14px 18px;
       margin: 10px 0;
       border-radius: 10px;
-      font-weight: bold;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.25s;
       text-align: center;
     }
 
     .tarjeta:hover, .producto:hover {
-      background: #e0f7fa;
+      background: #e3f2fd;
     }
 
     #popupCantidad {
@@ -64,7 +64,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      padding: 20px;
+      padding: 22px;
       border-radius: 10px;
       z-index: 9999;
       color: black;
@@ -94,15 +94,8 @@
       cursor: pointer;
     }
 
-    #popupCantidad .cancelar {
-      background: #ccc;
-      color: black;
-    }
-
-    #popupCantidad .agregar {
-      background: #0d47a1;
-      color: white;
-    }
+    #popupCantidad .cancelar { background: #ccc; color: black; }
+    #popupCantidad .agregar { background: #0d47a1; color: white; }
 
     footer {
       text-align: center;
@@ -116,27 +109,31 @@
 
   <img src="logo_proveedora.png" class="marca-agua" alt="Marca de agua">
 
+  <!-- PANTALLA PRINCIPAL -->
   <div class="contenedor" id="pantalla">
     <h2>Selecciona una línea</h2>
-  <div class="tarjeta" onclick="mostrarCategorias('REYMA')">REYMA</div>
-  <div class="tarjeta" onclick="mostrarCategorias('BIOPLAST')">BIOPLAST</div>
-  <div class="tarjeta" onclick="mostrarCategorias('JAGUAR')">JAGUAR</div>
-  <div class="tarjeta" onclick="mostrarCategorias('BIGCOLA')">LIQUIDOS</div>
-  <div class="tarjeta" onclick="mostrarCategorias('CONVERMEX')">CONVERMEX</div>
-  <div class="tarjeta" onclick="mostrarCategorias('BOLSASPLASTICAS')">BOLSAS PLASTICAS</div>
-</div>
+    <div class="tarjeta" onclick="mostrarCategorias('REYMA')">REYMA</div>
+    <div class="tarjeta" onclick="mostrarCategorias('REYMA CHAROLA')">REYMA CHAROLA</div>
+    <div class="tarjeta" onclick="mostrarCategorias('BIOPLAST')">BIOPLAST</div>
+    <div class="tarjeta" onclick="mostrarCategorias('JAGUAR')">JAGUAR</div>
+    <div class="tarjeta" onclick="mostrarCategorias('LIQUIDO')">LÍQUIDOS</div>
+    <div class="tarjeta" onclick="mostrarCategorias('CONVERMEX')">CONVERMEX</div>
+    <div class="tarjeta" onclick="mostrarCategorias('BOLSAS PLASTICAS')">BOLSAS PLÁSTICAS</div>
+  </div>
 
-
+  <!-- CATEGORÍAS -->
   <div class="contenedor" id="categorias" style="display: none;">
     <h2 id="tituloCategoria"></h2>
     <div id="listaCategorias"></div>
   </div>
 
+  <!-- PRODUCTOS -->
   <div class="contenedor" id="productos" style="display: none;">
     <h2 id="tituloProductos"></h2>
     <div id="listaProductos"></div>
   </div>
 
+  <!-- POPUP CANTIDAD -->
   <div id="popupCantidad">
     <h3>Agregar cantidad</h3>
     <p id="nombreProductoSeleccionado"></p>
@@ -156,7 +153,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, getDocs, query, where } 
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === 🔧 CONFIGURACIÓN FIREBASE ===
+// === 🔥 FIREBASE CONFIG ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -169,14 +166,29 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// === 🏷️ CATEGORÍAS POR LÍNEA ===
+// === 🏷️ LÍNEAS Y CATEGORÍAS ===
 const categoriasPorLinea = {
-  REYMA: ['CHAROLA', 'CONTENEDOR', 'PLATO', 'VASO', 'CHAROLAS COLORES', 'CONTENEDORES NEGROS'],
-  BIOPLAST: ['BIO', 'ECO', 'TINAJITA'],
-  JAGUAR: ['JUGUERO', 'JAGUAR'],
-  LIQUIDOS: ['BIG', 'CIFRUT', 'AGUA'],
-  CONVERMEX: ['VASO'],
-  'BOLSAS PLASTICAS': ['BOLSA', 'CAMISETA']
+  "REYMA": [
+    "PLATO", "VASO", "CHAROLA", "CONTENEDOR", "TAPA", "COLOR", "NEGRO"
+  ],
+  "REYMA CHAROLA": [
+    "BIO", "TERMICA", "COLORES"
+  ],
+  "BIOPLAST": [
+    "BIO", "ECO", "TINAJITA"
+  ],
+  "JAGUAR": [
+    "PLATO", "VASO", "JUGUERO"
+  ],
+  "LIQUIDO": [
+    "BIG", "CIFRUT", "AGUA", "CHECHIFRESCO"
+  ],
+  "CONVERMEX": [
+    "VASO", "TAPA", "ENVASE"
+  ],
+  "BOLSAS PLASTICAS": [
+    "CAMISETA", "PLANA", "ROLLO", "CIMAPLAST"
+  ]
 };
 
 // === 🟦 MOSTRAR CATEGORÍAS ===
@@ -201,25 +213,20 @@ async function mostrarProductos(linea, categoria) {
   const lista = document.getElementById("listaProductos");
   lista.innerHTML = "<p>Cargando productos...</p>";
 
-  // 🔍 Buscar por campo "linea" (si existe) o por coincidencia en descripción
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
   const q = query(colRef, where("linea", "==", linea));
   const snap = await getDocs(q);
 
   lista.innerHTML = "";
 
-  // Si no hay campo "linea", hacer búsqueda manual por descripción
   if (snap.empty) {
+    // Si no tiene campo línea, usar búsqueda en descripción
     const allSnap = await getDocs(colRef);
     allSnap.forEach(docSnap => {
       const p = docSnap.data();
       const descripcion = (p.descripcion || "").toUpperCase();
       if (descripcion.includes(categoria.toUpperCase())) {
-        const div = document.createElement("div");
-        div.className = "producto";
-        div.textContent = `${p.descripcion} (Stock: ${p.cantidad || 0})`;
-        div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
-        lista.appendChild(div);
+        crearTarjetaProducto(lista, p);
       }
     });
   } else {
@@ -228,11 +235,7 @@ async function mostrarProductos(linea, categoria) {
       if (!p.descripcion) return;
       const descripcion = p.descripcion.toUpperCase();
       if (descripcion.includes(categoria.toUpperCase())) {
-        const div = document.createElement("div");
-        div.className = "producto";
-        div.textContent = `${p.descripcion} (Stock: ${p.cantidad || 0})`;
-        div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
-        lista.appendChild(div);
+        crearTarjetaProducto(lista, p);
       }
     });
   }
@@ -241,6 +244,14 @@ async function mostrarProductos(linea, categoria) {
 
   document.getElementById("tituloProductos").textContent = `${linea} - ${categoria}`;
   document.getElementById("productos").style.display = "block";
+}
+
+function crearTarjetaProducto(lista, p) {
+  const div = document.createElement("div");
+  div.className = "producto";
+  div.textContent = `${p.descripcion} (Stock: ${p.cantidad || 0})`;
+  div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
+  lista.appendChild(div);
 }
 
 // === 🛒 AGREGAR PRODUCTO Y CANTIDAD ===
@@ -263,6 +274,7 @@ function confirmarCantidad() {
 
   const nombre = productoSeleccionado.nombre;
   const codigo = productoSeleccionado.codigo;
+
   let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
   carrito.push({ nombre, codigo, cantidad });
   localStorage.setItem("carrito", JSON.stringify(carrito));
@@ -271,7 +283,7 @@ function confirmarCantidad() {
   window.location.href = "pantalla3.html";
 }
 
-// === 🌍 HACER FUNCIONES GLOBALES PARA HTML ONCLICK ===
+// === 🌍 Exponer funciones para HTML ===
 window.mostrarCategorias = mostrarCategorias;
 window.mostrarProductos = mostrarProductos;
 window.agregarCantidad = agregarCantidad;
@@ -280,11 +292,3 @@ window.confirmarCantidad = confirmarCantidad;
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
