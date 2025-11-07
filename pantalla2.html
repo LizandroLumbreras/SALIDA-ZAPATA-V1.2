@@ -156,6 +156,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, getDocs, query, where } 
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// === 🔧 CONFIGURACIÓN FIREBASE ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -168,6 +169,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// === 🏷️ CATEGORÍAS POR LÍNEA ===
 const categoriasPorLinea = {
   REYMA: ['CHAROLA', 'CONTENEDOR', 'PLATO', 'VASO', 'CHAROLAS COLORES', 'CONTENEDORES NEGROS'],
   BIOPLAST: ['BIO', 'ECO', 'TINAJITA'],
@@ -177,6 +179,7 @@ const categoriasPorLinea = {
   'BOLSAS PLASTICAS': ['BOLSA', 'CAMISETA']
 };
 
+// === 🟦 MOSTRAR CATEGORÍAS ===
 function mostrarCategorias(linea) {
   document.getElementById("pantalla").style.display = "none";
   const lista = document.getElementById("listaCategorias");
@@ -192,6 +195,7 @@ function mostrarCategorias(linea) {
   document.getElementById("categorias").style.display = "block";
 }
 
+// === 🧩 MOSTRAR PRODUCTOS DESDE FIRESTORE ===
 async function mostrarProductos(linea, categoria) {
   document.getElementById("categorias").style.display = "none";
   const lista = document.getElementById("listaProductos");
@@ -201,12 +205,18 @@ async function mostrarProductos(linea, categoria) {
   const snap = await getDocs(q);
   lista.innerHTML = "";
 
+  if (snap.empty) {
+    lista.innerHTML = "<p>No hay productos en esta línea.</p>";
+    return;
+  }
+
   snap.forEach(docSnap => {
     const p = docSnap.data();
-    if (p.descripcion.toUpperCase().includes(categoria.toUpperCase())) {
+    const descripcion = (p.descripcion || "").toUpperCase();
+    if (descripcion.includes(categoria.toUpperCase())) {
       const div = document.createElement("div");
       div.className = "producto";
-      div.textContent = `${p.descripcion} (Stock: ${p.cantidad})`;
+      div.textContent = `${p.descripcion} (Stock: ${p.cantidad || 0})`;
       div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
       lista.appendChild(div);
     }
@@ -216,7 +226,7 @@ async function mostrarProductos(linea, categoria) {
   document.getElementById("productos").style.display = "block";
 }
 
-// === Popup y carrito ===
+// === 🛒 AGREGAR PRODUCTO Y CANTIDAD ===
 let productoSeleccionado = null;
 
 function agregarCantidad(nombre, codigo) {
@@ -243,9 +253,17 @@ function confirmarCantidad() {
   cerrarPopup();
   window.location.href = "pantalla3.html";
 }
+
+// === 🌍 HACER FUNCIONES GLOBALES PARA HTML ONCLICK ===
+window.mostrarCategorias = mostrarCategorias;
+window.mostrarProductos = mostrarProductos;
+window.agregarCantidad = agregarCantidad;
+window.cerrarPopup = cerrarPopup;
+window.confirmarCantidad = confirmarCantidad;
 </script>
 </body>
 </html>
+
 
 
 
