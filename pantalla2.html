@@ -182,15 +182,18 @@ async function cargarLineas() {
   snap.forEach(doc => {
     const p = doc.data();
     if (p.linea && p.descripcion && p.codigo) {
-      productos.push(p);
-      if (!lineasUnicas.includes(p.linea)) lineasUnicas.push(p.linea);
+      const lineaNormalizada = p.linea.trim().toUpperCase();
+      productos.push({ ...p, linea: lineaNormalizada });
+      if (!lineasUnicas.includes(lineaNormalizada)) {
+        lineasUnicas.push(lineaNormalizada);
+      }
     }
   });
 
   // limpiar tarjetas previas
   contenedor.querySelectorAll(".tarjeta").forEach(x => x.remove());
 
-  // generar tarjetas dinámicas por línea
+  // generar tarjetas únicas y ordenadas
   lineasUnicas.sort().forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
@@ -199,6 +202,7 @@ async function cargarLineas() {
     contenedor.appendChild(div);
   });
 }
+
 
 // === 🧾 MOSTRAR PRODUCTOS POR LÍNEA ===
 function mostrarProductos(linea) {
@@ -263,5 +267,6 @@ cargarLineas();
 </script>
 </body>
 </html>
+
 
 
