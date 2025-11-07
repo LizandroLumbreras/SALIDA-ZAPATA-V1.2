@@ -315,11 +315,19 @@ console.log(esCritico ? "🚨 Enviado alerta crítica" : "📊 Actualización no
 });
 
 // ✅ Mostrar folio cincho una sola vez
-const folioCincho = localStorage.getItem("folioCincho") || "";
-if (folioCincho) {
-  document.getElementById("folioCinchoMostrar").textContent = `🚚 Folio de Cincho: ${folioCincho}`;
+const folioCincho = localStorage.getItem("folioCincho");
+document.getElementById("folioCinchoMostrar").textContent =
+  folioCincho && folioCincho.trim() !== ""
+    ? `🚚 Folio de Cincho: ${folioCincho}`
+    : "🚚 Sin folio de cincho registrado";
+
+// 🔸 Si viene marcado desde la firma, abrir modal automáticamente
+const solicitarCincho = localStorage.getItem("solicitarCincho") === "true";
+if (solicitarCincho && !folioCincho) {
+  abrirModalCincho();
+  localStorage.removeItem("solicitarCincho");
 }
-  });
+});
   </script>
   <!-- 🔹 Modal Folio de Cincho -->
 <div id="modalCincho" class="no-print" style="
@@ -340,6 +348,7 @@ if (folioCincho) {
 </div>
 </body>
 </html>
+
 
 
 
