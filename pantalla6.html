@@ -173,6 +173,9 @@
     folio = "PDDZAP - " + String(numeroFolio).padStart(4, "0");
     document.getElementById("folio").textContent = folio;
   }
+if (!folio) {
+  document.getElementById("folio").textContent = "SIN FOLIO";
+}
 
   function imprimirYDescargar() {
     const elemento = document.querySelector(".resumen");
@@ -213,21 +216,22 @@ function confirmarCincho() {
   }
 
   localStorage.setItem("folioCincho", noCamion ? "" : folioCincho);
-cerrarModalCincho();
+  cerrarModalCincho();
 
-// ✅ Actualizar el resumen visual
-document.getElementById("folioCinchoMostrar").textContent =
-  folioCincho && folioCincho.trim() !== ""
-    ? `🚚 Folio de Cincho: ${folioCincho}`
-    : "🚚 Sin folio de cincho registrado";
+  // ✅ Actualizar el resumen visual
+  document.getElementById("folioCinchoMostrar").textContent =
+    folioCincho && folioCincho.trim() !== ""
+      ? `🚚 Folio de Cincho: ${folioCincho}`
+      : "🚚 Sin folio de cincho registrado";
 
-// 🔹 Si la ventana del cincho fue abierta desde 'Guardar salida', continuar guardando
-if (window.guardandoSalida === true) {
-  window.guardandoSalida = false;
-  guardarEnFirebase();
-} else {
-  alert("✅ Folio de cincho registrado. Ahora puedes imprimir o guardar la salida.");
-}
+  // 🔹 Si la ventana del cincho fue abierta desde 'Guardar salida', continuar guardando
+  if (window.guardandoSalida === true) {
+    window.guardandoSalida = false;
+    guardarEnFirebase();
+  } else {
+    alert("✅ Folio de cincho registrado. Ahora puedes imprimir o guardar la salida.");
+  }
+} // 👈 ESTE CIERRE FALTABA
 
 function verificarCinchoYGuardar() {
   const folioCincho = localStorage.getItem("folioCincho");
@@ -380,36 +384,53 @@ console.log(esCritico ? "🚨 Enviado alerta crítica" : "📊 Actualización no
   }
 
 
-  document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
     await obtenerFolioDesdeFirebase();
-    document.getElementById('fecha').textContent = localStorage.getItem("resumenFecha") || "Sin fecha";
-    document.getElementById('entrega').textContent = localStorage.getItem("entrega") || "No asignado";
-    document.getElementById('recibe').textContent = localStorage.getItem("recibe") || "No asignado";
-    document.getElementById('destino').textContent = localStorage.getItem("destino") || "NO DEFINIDO";
-    document.getElementById('firmaEntrega').src = localStorage.getItem("firmaEntrega") || "";
-    document.getElementById('firmaRecibe').src = localStorage.getItem("firmaRecibe") || "";
+  } catch (e) {
+    console.warn("Error al obtener folio:", e);
+    document.getElementById("folio").textContent = "ERROR AL CARGAR FOLIO";
+  }
 
-    const lista = JSON.parse(localStorage.getItem("carrito") || "[]");
-    const ul = document.getElementById("lista-articulos");
- lista.forEach(p => {
-  const li = document.createElement("li");
-  li.textContent = `• ${p.cantidad} x ${p.nombre} (Código: ${p.codigo})`;
-  ul.appendChild(li);
-});
+  // Mostrar datos del resumen
+  document.getElementById('fecha').textContent = localStorage.getItem("resumenFecha") || "Sin fecha";
+  document.getElementById('entrega').textContent = localStorage.getItem("entrega") || "No asignado";
+  document.getElementById('recibe').textContent = localStorage.getItem("recibe") || "No asignado";
+  document.getElementById('destino').textContent = localStorage.getItem("destino") || "NO DEFINIDO";
 
-// ✅ Mostrar folio cincho una sola vez
-const folioCincho = localStorage.getItem("folioCincho");
-document.getElementById("folioCinchoMostrar").textContent =
-  folioCincho && folioCincho.trim() !== ""
-    ? `🚚 Folio de Cincho: ${folioCincho}`
-    : "🚚 Sin folio de cincho registrado";
+  const firmaEntrega = localStorage.getItem("firmaEntrega");
+  const firmaRecibe = localStorage.getItem("firmaRecibe");
+  document.getElementById('firmaEntrega').src = firmaEntrega || "";
+  document.getElementById('firmaRecibe').src = firmaRecibe || "";
 
-// 🔸 Si viene marcado desde la firma, abrir modal automáticamente
-const solicitarCincho = localStorage.getItem("solicitarCincho") === "true";
-if (solicitarCincho && !folioCincho) {
-  abrirModalCincho();
-  localStorage.removeItem("solicitarCincho");
-}
+  // Cargar artículos
+  const lista = JSON.parse(localStorage.getItem("carrito") || "[]");
+  const ul = document.getElementById("lista-articulos");
+  if (lista.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "Sin artículos cargados";
+    ul.appendChild(li);
+  } else {
+    lista.forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = `• ${p.cantidad} x ${p.nombre} (Código: ${p.codigo})`;
+      ul.appendChild(li);
+    });
+  }
+
+  // Mostrar cincho
+  const folioCincho = localStorage.getItem("folioCincho");
+  document.getElementById("folioCinchoMostrar").textContent =
+    folioCincho && folioCincho.trim() !== ""
+      ? `🚚 Folio de Cincho: ${folioCincho}`
+      : "🚚 Sin folio de cincho registrado";
+
+  // Si se viene desde la firma, pedir cincho automáticamente
+  const solicitarCincho = localStorage.getItem("solicitarCincho") === "true";
+  if (solicitarCincho && !folioCincho) {
+    abrirModalCincho();
+    localStorage.removeItem("solicitarCincho");
+  }
 });
   </script>
   <!-- 🔹 Modal Folio de Cincho -->
@@ -431,11 +452,3 @@ if (solicitarCincho && !folioCincho) {
 </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
