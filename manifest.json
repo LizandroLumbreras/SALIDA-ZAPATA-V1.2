@@ -1,0 +1,23 @@
+{
+  "name": "Salida Zapata",
+  "short_name": "SalidaZapata",
+  "description": "Aplicación de control de salidas del almacén Zapata.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#E4E5E6",
+  "theme_color": "#00416A",
+  "orientation": "portrait",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "logo_proveedora.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo_proveedora.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
