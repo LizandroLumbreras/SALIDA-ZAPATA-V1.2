@@ -169,11 +169,17 @@ const db = getFirestore(app);
 let productos = [];
 let lineasUnicas = [];
 
-// === 🧩 CARGAR LÍNEAS SOLO DE INVENTARIO INICIAL ===
+// === 🧩 CARGAR LÍNEAS BASADAS EN FECHA ===
 async function cargarLineas() {
   const contenedor = document.getElementById("pantalla");
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
-  const q = query(colRef, where("tipoMovimiento", "==", "entrada_inicial"));
+
+  // 📅 FECHA DE CORTE: cambia esta si lo necesitas
+  const fechaCorte = new Date("2025-11-11T00:00:00Z");
+
+  // 🔍 Trae solo documentos con fecha posterior a la carga inicial
+  const q = query(colRef, where("fechaCreacion", ">=", fechaCorte));
+
   const snap = await getDocs(q);
 
   productos = [];
@@ -267,6 +273,7 @@ cargarLineas();
 </script>
 </body>
 </html>
+
 
 
 
