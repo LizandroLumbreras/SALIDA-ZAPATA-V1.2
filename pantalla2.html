@@ -148,39 +148,50 @@ async function cargarProductos(forzar = false) {
   productos = [];
   lineasUnicas.clear();
 
-  for (const d of snap.docs) {
-    const data = d.data();
-    const fecha = data.fechaCreacion ? new Date(data.fechaCreacion) : null;
-    const esReciente = fecha ? fecha >= fechaFiltro : true;
-    if (!esReciente) continue;
+for (const d of snap.docs) {
+  const data = d.data();
+  const fecha = data.fechaCreacion ? new Date(data.fechaCreacion) : null;
+  const esReciente = fecha ? fecha >= fechaFiltro : true;
+  if (!esReciente) continue;
 
-    if (Array.isArray(data.conceptos_detalle)) {
-      for (const c of data.conceptos_detalle) {
-        const codigo = String(c.productoId || c.codigoSAT || "").trim();
-        if (!codigo || vistos.has(codigo)) continue;
-        vistos.add(codigo);
-        let desc = (c.descripcion || c.productoInterno || "").trim();
-        if (!desc) desc = await buscarDescripcion(codigo);
-        if (!desc) continue;
-        const linea = (data.linea || "").trim().toUpperCase();
-        if (!linea) continue;
-        productos.push({ codigo, descripcion: desc, linea });
-        lineasUnicas.add(linea);
-      }
-    }
-
-    const codigo = String(data.codigo || "").trim();
-    if (codigo && !vistos.has(codigo)) {
+  // --- Si tiene conceptos_detalle ---
+  if (Array.isArray(data.conceptos_detalle)) {
+    for (const c of data.conceptos_detalle) {
+      const codigo = String(c.productoId || c.codigoSAT || "").trim();
+      if (!codigo || vistos.has(codigo)) continue;
       vistos.add(codigo);
-      let desc = (data.descripcion || "").trim();
+      let desc = (c.descripcion || c.productoInterno || "").trim();
       if (!desc) desc = await buscarDescripcion(codigo);
       if (!desc) continue;
       const linea = (data.linea || "").trim().toUpperCase();
       if (!linea) continue;
+
+      // evita duplicados por código o descripción
+      if (!productos.some(p => p.codigo === codigo || p.descripcion === desc)) {
+        productos.push({ codigo, descripcion: desc, linea });
+        lineasUnicas.add(linea);
+      }
+    }
+  } // 👈 ESTA LLAVE FALTABA AQUÍ
+
+  // --- Si es un documento directo ---
+  const codigo = String(data.codigo || "").trim();
+  if (codigo && !vistos.has(codigo)) {
+    vistos.add(codigo);
+    let desc = (data.descripcion || "").trim();
+    if (!desc) desc = await buscarDescripcion(codigo);
+    if (!desc) continue;
+    const linea = (data.linea || "").trim().toUpperCase();
+    if (!linea) continue;
+
+    // evita duplicados por código o descripción
+    if (!productos.some(p => p.codigo === codigo || p.descripcion === desc)) {
       productos.push({ codigo, descripcion: desc, linea });
       lineasUnicas.add(linea);
     }
   }
+}
+
 
   // 💾 Guarda cache local
   localStorage.setItem("cacheProductosZapata", JSON.stringify(productos));
@@ -268,4 +279,5 @@ cargarProductos();
 </script>
 </body>
 </html>
+
 
