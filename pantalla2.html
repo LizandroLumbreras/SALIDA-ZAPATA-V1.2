@@ -8,100 +8,46 @@
     body {
       font-family: 'Poppins', sans-serif;
       background: linear-gradient(to right, #00416A, #E4E5E6);
-      margin: 0;
-      padding: 0;
-      color: white;
-      min-height: 100vh;
-      position: relative;
+      margin: 0; padding: 0; color: white;
+      min-height: 100vh; position: relative;
     }
-
     .marca-agua {
-      position: fixed;
-      top: 50%;
-      left: 50%;
+      position: fixed; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      opacity: 0.15;
-      z-index: 0;
-      max-width: 80%;
+      opacity: 0.15; z-index: 0; max-width: 80%;
       pointer-events: none;
     }
-
     .contenedor {
-      max-width: 600px;
-      margin: 50px auto;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      position: relative;
-      z-index: 2;
+      max-width: 600px; margin: 50px auto; padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px; position: relative; z-index: 2;
     }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
+    h2 { text-align: center; margin-bottom: 20px; }
     .tarjeta, .producto {
-      background: white;
-      color: black;
-      padding: 14px 18px;
-      margin: 10px 0;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.25s;
-      text-align: center;
+      background: white; color: black; padding: 14px 18px;
+      margin: 10px 0; border-radius: 10px; font-weight: 600;
+      cursor: pointer; transition: background 0.25s; text-align: center;
     }
-
-    .tarjeta:hover, .producto:hover {
-      background: #e3f2fd;
-    }
-
+    .tarjeta:hover, .producto:hover { background: #e3f2fd; }
     #popupCantidad {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 22px;
-      border-radius: 10px;
-      z-index: 9999;
-      color: black;
-      width: 90%;
-      max-width: 350px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      display: none; position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); background: white; padding: 22px;
+      border-radius: 10px; z-index: 9999; color: black; width: 90%;
+      max-width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     }
-
-    #popupCantidad h3 {
-      margin-top: 0;
-      text-align: center;
-      color: #0d47a1;
-    }
-
+    #popupCantidad h3 { margin-top: 0; text-align: center; color: #0d47a1; }
     #popupCantidad input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
+      width: 100%; padding: 10px; margin: 10px 0; font-size: 16px;
     }
-
     #popupCantidad button {
-      padding: 10px 20px;
-      margin: 5px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      padding: 10px 20px; margin: 5px; border: none;
+      border-radius: 6px; cursor: pointer;
     }
-
     #popupCantidad .cancelar { background: #ccc; color: black; }
     #popupCantidad .agregar { background: #0d47a1; color: white; }
-
     footer {
-      text-align: center;
-      margin-top: 40px;
-      color: rgba(255,255,255,0.7);
-      font-size: 14px;
+      text-align: center; margin-top: 40px;
+      color: rgba(255,255,255,0.7); font-size: 14px;
     }
   </style>
 </head>
@@ -109,31 +55,17 @@
 
   <img src="logo_proveedora.png" class="marca-agua" alt="Marca de agua">
 
-  <!-- PANTALLA PRINCIPAL -->
   <div class="contenedor" id="pantalla">
     <h2>Selecciona una línea</h2>
-    <div class="tarjeta" onclick="mostrarCategorias('REYMA')">REYMA</div>
-    <div class="tarjeta" onclick="mostrarCategorias('REYMA CHAROLA')">REYMA CHAROLA</div>
-    <div class="tarjeta" onclick="mostrarCategorias('BIOPLAST')">BIOPLAST</div>
-    <div class="tarjeta" onclick="mostrarCategorias('JAGUAR')">JAGUAR</div>
-    <div class="tarjeta" onclick="mostrarCategorias('LIQUIDO')">LÍQUIDOS</div>
-    <div class="tarjeta" onclick="mostrarCategorias('CONVERMEX')">CONVERMEX</div>
-    <div class="tarjeta" onclick="mostrarCategorias('BOLSAS PLASTICAS')">BOLSAS PLÁSTICAS</div>
+    <div id="lineasContainer"></div>
+    <p id="loader" style="text-align:center;margin-top:20px;">Cargando productos recientes...</p>
   </div>
 
-  <!-- CATEGORÍAS -->
-  <div class="contenedor" id="categorias" style="display: none;">
-    <h2 id="tituloCategoria"></h2>
-    <div id="listaCategorias"></div>
-  </div>
-
-  <!-- PRODUCTOS -->
-  <div class="contenedor" id="productos" style="display: none;">
+  <div class="contenedor" id="productos" style="display:none;">
     <h2 id="tituloProductos"></h2>
     <div id="listaProductos"></div>
   </div>
 
-  <!-- POPUP CANTIDAD -->
   <div id="popupCantidad">
     <h3>Agregar cantidad</h3>
     <p id="nombreProductoSeleccionado"></p>
@@ -150,9 +82,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getFirestore, collection, getDocs, getDoc, doc 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getDoc, doc } 
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // === 🔥 FIREBASE CONFIG ===
 const firebaseConfig = {
@@ -167,10 +98,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+const fechaFiltro = new Date("2025-11-06T00:00:00Z");
 let productos = [];
-let lineasUnicas = [];
+let lineasUnicas = new Set();
 
-// === 🔎 Función auxiliar: buscar descripción en colección productos ===
+// === Buscar descripción en colección productos ===
 async function buscarDescripcion(codigo) {
   try {
     const ref = doc(db, "productos", codigo);
@@ -179,82 +111,86 @@ async function buscarDescripcion(codigo) {
       const data = snap.data();
       return data.descripcion || data.nombre || "";
     }
-  } catch (e) {
-    console.warn("No se encontró descripción para:", codigo);
-  }
+  } catch (e) {}
   return "";
 }
 
-// === 🚀 Cargar todas las líneas del almacén ===
-async function cargarLineas() {
-  const contenedor = document.getElementById("pantalla");
+// === Cargar productos desde Firestore ===
+async function cargarProductos() {
+  const loader = document.getElementById("loader");
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
   const snap = await getDocs(colRef);
 
+  const vistos = new Set();
   productos = [];
-  lineasUnicas = [];
+  lineasUnicas.clear();
 
   for (const d of snap.docs) {
-    const p = d.data();
+    const data = d.data();
+    const fecha = data.fechaCreacion ? new Date(data.fechaCreacion) : null;
+    const esReciente = fecha ? fecha >= fechaFiltro : true;
+    if (!esReciente) continue;
 
-    // 🧩 Si tiene array de conceptos_detalle (facturas nuevas)
-    if (Array.isArray(p.conceptos_detalle)) {
-      for (const c of p.conceptos_detalle) {
+    // --- Si contiene conceptos_detalle ---
+    if (Array.isArray(data.conceptos_detalle)) {
+      for (const c of data.conceptos_detalle) {
         const codigo = String(c.productoId || c.codigoSAT || "").trim();
-        let desc = (c.descripcion || "").trim();
-        let linea = (c.linea || p.linea || "").trim().toUpperCase();
-
+        if (!codigo || vistos.has(codigo)) continue;
+        vistos.add(codigo);
+        let desc = (c.descripcion || c.productoInterno || "").trim();
         if (!desc) desc = await buscarDescripcion(codigo);
-        if (!codigo || !desc || !linea) continue;
-
+        if (!desc) continue;
+        const linea = (data.linea || "").trim().toUpperCase();
+        if (!linea) continue;
         productos.push({ codigo, descripcion: desc, linea });
-        if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
+        lineasUnicas.add(linea);
       }
-      continue;
     }
 
-    // 🧩 Si es entrada directa
-    const codigo = String(p.codigo || p.productoId || "").trim();
-    let desc = (p.descripcion || "").trim();
-    let linea = (p.linea || "").trim().toUpperCase();
-
-    if (!desc) desc = await buscarDescripcion(codigo);
-    if (!codigo || !desc || !linea) continue;
-
-    productos.push({ codigo, descripcion: desc, linea });
-    if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
+    // --- Si es un documento directo ---
+    const codigo = String(data.codigo || "").trim();
+    if (codigo && !vistos.has(codigo)) {
+      vistos.add(codigo);
+      let desc = (data.descripcion || "").trim();
+      if (!desc) desc = await buscarDescripcion(codigo);
+      if (!desc) continue;
+      const linea = (data.linea || "").trim().toUpperCase();
+      if (!linea) continue;
+      productos.push({ codigo, descripcion: desc, linea });
+      lineasUnicas.add(linea);
+    }
   }
 
-  // 🧾 Limpia tarjetas previas
-  contenedor.querySelectorAll(".tarjeta").forEach(x => x.remove());
+  loader.style.display = "none";
+  mostrarLineas();
+}
 
-  if (lineasUnicas.length === 0) {
-    const aviso = document.createElement("div");
-    aviso.textContent = "No hay productos con línea asignada.";
-    aviso.style.textAlign = "center";
-    aviso.style.padding = "20px";
-    contenedor.appendChild(aviso);
+// === Mostrar tarjetas de líneas ===
+function mostrarLineas() {
+  const cont = document.getElementById("lineasContainer");
+  cont.innerHTML = "";
+
+  if (lineasUnicas.size === 0) {
+    cont.innerHTML = "<p>No hay productos con línea definida o recientes.</p>";
     return;
   }
 
-  // 🧩 Genera las tarjetas dinámicamente
-  lineasUnicas.sort().forEach(linea => {
+  [...lineasUnicas].sort().forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
     div.textContent = linea;
     div.onclick = () => mostrarProductos(linea);
-    contenedor.appendChild(div);
+    cont.appendChild(div);
   });
 }
 
-// === 🧾 Mostrar productos por línea ===
+// === Mostrar productos de una línea ===
 function mostrarProductos(linea) {
   document.getElementById("pantalla").style.display = "none";
   const lista = document.getElementById("listaProductos");
   lista.innerHTML = "";
 
   const filtrados = productos.filter(p => p.linea === linea);
-
   if (filtrados.length === 0) {
     lista.innerHTML = "<p>No hay productos en esta línea.</p>";
   } else {
@@ -271,7 +207,7 @@ function mostrarProductos(linea) {
   document.getElementById("productos").style.display = "block";
 }
 
-// === 🛒 Lógica del popup ===
+// === Popup de cantidad ===
 let productoSeleccionado = null;
 function agregarCantidad(nombre, codigo) {
   productoSeleccionado = { nombre, codigo };
@@ -285,32 +221,20 @@ function cerrarPopup() {
 function confirmarCantidad() {
   const cantidad = parseInt(document.getElementById("inputCantidad").value);
   if (isNaN(cantidad) || cantidad <= 0) return alert("Cantidad inválida.");
-
   const nombre = productoSeleccionado.nombre;
   const codigo = productoSeleccionado.codigo;
-
   let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
   carrito.push({ nombre, codigo, cantidad });
   localStorage.setItem("carrito", JSON.stringify(carrito));
-
   cerrarPopup();
   window.location.href = "pantalla3.html";
 }
 
-// === 🌍 Exponer funciones ===
-window.mostrarProductos = mostrarProductos;
-window.agregarCantidad = agregarCantidad;
 window.cerrarPopup = cerrarPopup;
 window.confirmarCantidad = confirmarCantidad;
+window.agregarCantidad = agregarCantidad;
 
-// === 🚀 Inicio automático ===
-cargarLineas();
+cargarProductos();
 </script>
 </body>
 </html>
-
-
-
-
-
-
