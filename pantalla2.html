@@ -169,7 +169,6 @@ const db = getFirestore(app);
 let productos = [];
 let lineasUnicas = [];
 
-// === 🔄 CARGAR ENTRADAS Y EVITAR DUPLICADOS POR CUALQUIER IDENTIFICADOR ===
 async function cargarLineas() {
   const contenedor = document.getElementById("pantalla");
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
@@ -178,49 +177,21 @@ async function cargarLineas() {
   productos = [];
   lineasUnicas = [];
 
-  // 🧠 Cargar identificadores previos del almacenamiento local
-  const localSet = new Set(JSON.parse(localStorage.getItem("identificadoresProductos") || "[]"));
-  const identificadores = new Set(localSet);
-
-  let nuevosDetectados = false;
-
   snap.forEach(doc => {
     const p = doc.data();
-    const docId = doc.id;
     const codigo = String(p.codigo || "").trim();
-    const codigoBarra = String(p.codigoBarra || p.codigoBarras || "").trim();
-    const productoId = String(p.productoId || p.idProducto || "").trim();
+    if (!codigo || !p.descripcion || !p.linea) return;
 
-    // Crear un conjunto de claves únicas
-    const claves = [codigo, codigoBarra, productoId, docId]
-      .filter(Boolean)
-      .map(c => c.toUpperCase());
+    const linea = p.linea.trim().toUpperCase();
+    productos.push({ ...p, linea, codigo });
 
-    // Verificar si ya existen
-    const duplicado = claves.some(c => identificadores.has(c));
-    if (duplicado) return;
-
-    // Registrar claves nuevas
-    claves.forEach(c => identificadores.add(c));
-    nuevosDetectados = true;
-
-    // Agregar producto si tiene datos básicos
-    if (p.linea && p.descripcion && codigo) {
-      const linea = p.linea.trim().toUpperCase();
-      productos.push({ ...p, linea, codigo });
-      if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
-    }
+    if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
   });
 
-  // Si hay nuevos, guardar actualizados en localStorage
-  if (nuevosDetectados) {
-    localStorage.setItem("identificadoresProductos", JSON.stringify([...identificadores]));
-  }
-
-  // limpiar tarjetas previas
+  // 🔁 Limpiar tarjetas previas
   contenedor.querySelectorAll(".tarjeta").forEach(x => x.remove());
 
-  // generar tarjetas únicas y ordenadas
+  // 🔄 Generar nuevas tarjetas con las líneas actualizadas
   lineasUnicas.sort().forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
@@ -229,6 +200,7 @@ async function cargarLineas() {
     contenedor.appendChild(div);
   });
 }
+
 // === 🧾 MOSTRAR PRODUCTOS POR LÍNEA ===
 function mostrarProductos(linea) {
   document.getElementById("pantalla").style.display = "none";
@@ -292,6 +264,7 @@ cargarLineas();
 </script>
 </body>
 </html>
+
 
 
 
