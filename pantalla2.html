@@ -169,26 +169,53 @@ const db = getFirestore(app);
 let productos = [];
 let lineasUnicas = [];
 
-// === 🧩 CARGAR LÍNEAS SOLO DE INVENTARIO INICIAL ===
+// === 🔄 CARGAR ENTRADAS Y EVITAR DUPLICADOS POR CUALQUIER IDENTIFICADOR ===
 async function cargarLineas() {
   const contenedor = document.getElementById("pantalla");
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
-  const q = query(colRef, where("tipoMovimiento", "==", "entrada_inicial"));
-  const snap = await getDocs(q);
+  const snap = await getDocs(colRef);
 
   productos = [];
   lineasUnicas = [];
 
+  // 🧠 Cargar identificadores previos del almacenamiento local
+  const localSet = new Set(JSON.parse(localStorage.getItem("identificadoresProductos") || "[]"));
+  const identificadores = new Set(localSet);
+
+  let nuevosDetectados = false;
+
   snap.forEach(doc => {
     const p = doc.data();
-    if (p.linea && p.descripcion && p.codigo) {
-      const lineaNormalizada = p.linea.trim().toUpperCase();
-      productos.push({ ...p, linea: lineaNormalizada });
-      if (!lineasUnicas.includes(lineaNormalizada)) {
-        lineasUnicas.push(lineaNormalizada);
-      }
+    const docId = doc.id;
+    const codigo = String(p.codigo || "").trim();
+    const codigoBarra = String(p.codigoBarra || p.codigoBarras || "").trim();
+    const productoId = String(p.productoId || p.idProducto || "").trim();
+
+    // Crear un conjunto de claves únicas
+    const claves = [codigo, codigoBarra, productoId, docId]
+      .filter(Boolean)
+      .map(c => c.toUpperCase());
+
+    // Verificar si ya existen
+    const duplicado = claves.some(c => identificadores.has(c));
+    if (duplicado) return;
+
+    // Registrar claves nuevas
+    claves.forEach(c => identificadores.add(c));
+    nuevosDetectados = true;
+
+    // Agregar producto si tiene datos básicos
+    if (p.linea && p.descripcion && codigo) {
+      const linea = p.linea.trim().toUpperCase();
+      productos.push({ ...p, linea, codigo });
+      if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
     }
   });
+
+  // Si hay nuevos, guardar actualizados en localStorage
+  if (nuevosDetectados) {
+    localStorage.setItem("identificadoresProductos", JSON.stringify([...identificadores]));
+  }
 
   // limpiar tarjetas previas
   contenedor.querySelectorAll(".tarjeta").forEach(x => x.remove());
@@ -202,8 +229,6 @@ async function cargarLineas() {
     contenedor.appendChild(div);
   });
 }
-
-
 // === 🧾 MOSTRAR PRODUCTOS POR LÍNEA ===
 function mostrarProductos(linea) {
   document.getElementById("pantalla").style.display = "none";
@@ -267,6 +292,7 @@ cargarLineas();
 </script>
 </body>
 </html>
+
 
 
 
