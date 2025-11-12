@@ -150,10 +150,11 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } 
-  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+  getFirestore, collection, getDocs, getDoc, doc 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === 🔥 CONFIG FIREBASE ===
+// === 🔥 FIREBASE CONFIG ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -169,6 +170,22 @@ const db = getFirestore(app);
 let productos = [];
 let lineasUnicas = [];
 
+// === 🔎 Función auxiliar: buscar descripción en colección productos ===
+async function buscarDescripcion(codigo) {
+  try {
+    const ref = doc(db, "productos", codigo);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const data = snap.data();
+      return data.descripcion || data.nombre || "";
+    }
+  } catch (e) {
+    console.warn("No se encontró descripción para:", codigo);
+  }
+  return "";
+}
+
+// === 🚀 Cargar todas las líneas del almacén ===
 async function cargarLineas() {
   const contenedor = document.getElementById("pantalla");
   const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
@@ -177,21 +194,50 @@ async function cargarLineas() {
   productos = [];
   lineasUnicas = [];
 
-  snap.forEach(doc => {
-    const p = doc.data();
-    const codigo = String(p.codigo || "").trim();
-    if (!codigo || !p.descripcion || !p.linea) return;
+  for (const d of snap.docs) {
+    const p = d.data();
 
-    const linea = p.linea.trim().toUpperCase();
-    productos.push({ ...p, linea, codigo });
+    // 🧩 Si tiene array de conceptos_detalle (facturas nuevas)
+    if (Array.isArray(p.conceptos_detalle)) {
+      for (const c of p.conceptos_detalle) {
+        const codigo = String(c.productoId || c.codigoSAT || "").trim();
+        let desc = (c.descripcion || "").trim();
+        let linea = (c.linea || p.linea || "").trim().toUpperCase();
 
+        if (!desc) desc = await buscarDescripcion(codigo);
+        if (!codigo || !desc || !linea) continue;
+
+        productos.push({ codigo, descripcion: desc, linea });
+        if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
+      }
+      continue;
+    }
+
+    // 🧩 Si es entrada directa
+    const codigo = String(p.codigo || p.productoId || "").trim();
+    let desc = (p.descripcion || "").trim();
+    let linea = (p.linea || "").trim().toUpperCase();
+
+    if (!desc) desc = await buscarDescripcion(codigo);
+    if (!codigo || !desc || !linea) continue;
+
+    productos.push({ codigo, descripcion: desc, linea });
     if (!lineasUnicas.includes(linea)) lineasUnicas.push(linea);
-  });
+  }
 
-  // 🔁 Limpiar tarjetas previas
+  // 🧾 Limpia tarjetas previas
   contenedor.querySelectorAll(".tarjeta").forEach(x => x.remove());
 
-  // 🔄 Generar nuevas tarjetas con las líneas actualizadas
+  if (lineasUnicas.length === 0) {
+    const aviso = document.createElement("div");
+    aviso.textContent = "No hay productos con línea asignada.";
+    aviso.style.textAlign = "center";
+    aviso.style.padding = "20px";
+    contenedor.appendChild(aviso);
+    return;
+  }
+
+  // 🧩 Genera las tarjetas dinámicamente
   lineasUnicas.sort().forEach(linea => {
     const div = document.createElement("div");
     div.className = "tarjeta";
@@ -201,7 +247,7 @@ async function cargarLineas() {
   });
 }
 
-// === 🧾 MOSTRAR PRODUCTOS POR LÍNEA ===
+// === 🧾 Mostrar productos por línea ===
 function mostrarProductos(linea) {
   document.getElementById("pantalla").style.display = "none";
   const lista = document.getElementById("listaProductos");
@@ -209,35 +255,33 @@ function mostrarProductos(linea) {
 
   const filtrados = productos.filter(p => p.linea === linea);
 
-  filtrados.forEach(p => crearTarjetaProducto(lista, p));
+  if (filtrados.length === 0) {
+    lista.innerHTML = "<p>No hay productos en esta línea.</p>";
+  } else {
+    filtrados.forEach(p => {
+      const div = document.createElement("div");
+      div.className = "producto";
+      div.textContent = p.descripcion;
+      div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
+      lista.appendChild(div);
+    });
+  }
 
   document.getElementById("tituloProductos").textContent = linea;
   document.getElementById("productos").style.display = "block";
 }
 
-// === 🎴 CREAR TARJETA DE PRODUCTO ===
-function crearTarjetaProducto(lista, p) {
-  const div = document.createElement("div");
-  div.className = "producto";
-  div.textContent = p.descripcion;
-  div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
-  lista.appendChild(div);
-}
-
-// === 🛒 AGREGAR PRODUCTO Y CANTIDAD ===
+// === 🛒 Lógica del popup ===
 let productoSeleccionado = null;
-
 function agregarCantidad(nombre, codigo) {
   productoSeleccionado = { nombre, codigo };
   document.getElementById("nombreProductoSeleccionado").textContent = nombre;
   document.getElementById("inputCantidad").value = '';
   document.getElementById("popupCantidad").style.display = "block";
 }
-
 function cerrarPopup() {
   document.getElementById("popupCantidad").style.display = "none";
 }
-
 function confirmarCantidad() {
   const cantidad = parseInt(document.getElementById("inputCantidad").value);
   if (isNaN(cantidad) || cantidad <= 0) return alert("Cantidad inválida.");
@@ -253,17 +297,18 @@ function confirmarCantidad() {
   window.location.href = "pantalla3.html";
 }
 
-// === 🌍 EXPONER FUNCIONES ===
+// === 🌍 Exponer funciones ===
 window.mostrarProductos = mostrarProductos;
 window.agregarCantidad = agregarCantidad;
 window.cerrarPopup = cerrarPopup;
 window.confirmarCantidad = confirmarCantidad;
 
-// === 🚀 INICIO AUTOMÁTICO ===
+// === 🚀 Inicio automático ===
 cargarLineas();
 </script>
 </body>
 </html>
+
 
 
 
