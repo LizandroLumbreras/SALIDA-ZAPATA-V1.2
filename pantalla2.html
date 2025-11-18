@@ -57,13 +57,15 @@
 
   <div class="contenedor" id="pantalla">
     <h2>Selecciona una línea</h2>
+
     <button id="btnActualizar" 
-  style="display:block;margin:10px auto;background:#0d47a1;color:white;
-  border:none;padding:10px 20px;border-radius:8px;cursor:pointer;">
-  🔄 Actualizar datos
-</button>
+      style="display:block;margin:10px auto;background:#0d47a1;color:white;
+      border:none;padding:10px 20px;border-radius:8px;cursor:pointer;">
+      🔄 Actualizar datos
+    </button>
+
     <div id="lineasContainer"></div>
-    <p id="loader" style="text-align:center;margin-top:20px;">Cargando productos recientes...</p>
+    <p id="loader" style="text-align:center;margin-top:20px;">Cargando productos…</p>
   </div>
 
   <div class="contenedor" id="productos" style="display:none;">
@@ -87,10 +89,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, getDoc, doc } 
+import { getFirestore, collection, getDocs, getDoc, doc }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === 🔥 FIREBASE CONFIG ===
+// === FIREBASE CONFIG ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -103,11 +105,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const fechaFiltro = new Date("2025-11-06T00:00:00Z");
 let productos = [];
 let lineasUnicas = new Set();
 
-// === Buscar descripción en colección productos ===
+// ----------------------------------------------------
+// Buscar descripción externa si no viene en productos[]
+// ----------------------------------------------------
 async function buscarDescripcion(codigo) {
   try {
     const ref = doc(db, "productos", codigo);
@@ -120,76 +123,51 @@ async function buscarDescripcion(codigo) {
   return "";
 }
 
-// === Cargar productos desde Firestore ===
+// ----------------------------------------------------
+// Cargar productos desde Firestore
+// ----------------------------------------------------
 async function cargarProductos(forzar = false) {
   const loader = document.getElementById("loader");
   loader.style.display = "block";
 
-  // ⚡ Verifica cache local
-  const cache = JSON.parse(localStorage.getItem("cacheProductosZapata")) || null;
-
-  if (cache && !forzar) {
-    document.getElementById("loader").textContent = "🟢 Datos cargados desde cache local.";
-    productos = cache;
-    lineasUnicas = new Set(cache.map(p => p.linea));
-    loader.style.display = "none";
-    mostrarLineas();
-    console.log("🟢 Cargado desde cache local");
-    return;
-  }
-
-  // 🔥 Carga completa desde Firestore
-  document.getElementById("loader").textContent = "📡 Actualizando desde Firestore...";
-  console.log("📡 Descargando desde Firestore...");
-  const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
-  const snap = await getDocs(colRef);
-
-  const vistos = new Set();
   productos = [];
   lineasUnicas.clear();
 
-for (const d of snap.docs) {
-    const data = d.data();
+  console.log("📡 Descargando desde Firestore...");
 
-    let linea = (data.linea || "").trim().toUpperCase();
-    if (!linea) linea = "SIN LÍNEA";
+  const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
+  const snap = await getDocs(colRef);
 
-    // -------- 1) LEER OBJETO [4] SI EXISTE --------
-    if (data[4]) {
-        const obj = data[4];
+  for (const d of snap.docs) {
+      const data = d.data();
 
-        let cod2 = "";
-        if (obj.codigobarras) cod2 = String(obj.codigobarras).trim();
-        else if (obj.codigoBarra) cod2 = String(obj.codigoBarra).trim();
+      // 💥 TU ESTRUCTURA REAL: productos[]
+      if (Array.isArray(data.productos)) {
 
-        if (cod2 && !productos.some(p => p.codigo === cod2)) {
-            let desc2 = (obj.descripcion || "").trim();
-            if (!desc2) desc2 = await buscarDescripcion(cod2);
+          for (const p of data.productos) {
 
-            if (desc2) {
-                productos.push({ codigo: cod2, descripcion: desc2, linea });
-                lineasUnicas.add(linea);
-            }
-        }
-    }
+              let codigo = "";
+              if (p.codigobarras) codigo = String(p.codigobarras).trim();
+              else if (p.codigoBarra) codigo = String(p.codigoBarra).trim();
 
-    // -------- 2) LEER CODIGO A NIVEL RAÍZ --------
-    let codigo = "";
-    if (data.codigo) codigo = String(data.codigo).trim();
-    else if (data.codigobarras) codigo = String(data.codigobarras).trim();
-    else if (data.codigoBarra) codigo = String(data.codigoBarra).trim();
+              if (!codigo) continue;
 
-    if (codigo) {
-        let descripcion = (data.descripcion || "").trim();
-        if (!descripcion) descripcion = await buscarDescripcion(codigo);
+              let descripcion = (p.descripcion || "").trim();
+              if (!descripcion) descripcion = await buscarDescripcion(codigo);
+              if (!descripcion) continue;
 
-        if (descripcion && !productos.some(p => p.codigo === codigo)) {
-            productos.push({ codigo, descripcion, linea });
-            lineasUnicas.add(linea);
-        }
-    }
-} // 👈 ESTA LLAVE FALTABA (CIERRA EL FOR)
-  // 💾 Guarda cache local
+              let linea = (p.linea || "").trim().toUpperCase();
+              if (!linea) linea = "SIN LÍNEA";
+
+              if (!productos.some(x => x.codigo === codigo)) {
+                  productos.push({ codigo, descripcion, linea });
+                  lineasUnicas.add(linea);
+              }
+          }
+      }
+  }
+
+  // Guardar cache
   localStorage.setItem("cacheProductosZapata", JSON.stringify(productos));
   console.log("💾 Cache actualizado con", productos.length, "productos");
 
@@ -197,65 +175,83 @@ for (const d of snap.docs) {
   mostrarLineas();
 }
 
-// === Mostrar tarjetas de líneas ===
+// ----------------------------------------------------
+// Mostrar tarjetas con las líneas
+// ----------------------------------------------------
 function mostrarLineas() {
   const cont = document.getElementById("lineasContainer");
   cont.innerHTML = "";
+
   if (lineasUnicas.size === 0) {
-    cont.innerHTML = "<p>No hay productos con línea definida o recientes.</p>";
-    return;
+      cont.innerHTML = "<p>No hay productos con línea definida o recientes.</p>";
+      return;
   }
+
   [...lineasUnicas].sort().forEach(linea => {
-    const div = document.createElement("div");
-    div.className = "tarjeta";
-    div.textContent = linea;
-    div.onclick = () => mostrarProductos(linea);
-    cont.appendChild(div);
+      const div = document.createElement("div");
+      div.className = "tarjeta";
+      div.textContent = linea;
+      div.onclick = () => mostrarProductos(linea);
+      cont.appendChild(div);
   });
 }
 
-// === Mostrar productos de una línea ===
+// ----------------------------------------------------
+// Mostrar productos por línea
+// ----------------------------------------------------
 function mostrarProductos(linea) {
   document.getElementById("pantalla").style.display = "none";
+
   const lista = document.getElementById("listaProductos");
   lista.innerHTML = "";
 
   const filtrados = productos.filter(p => p.linea === linea);
+
   if (filtrados.length === 0) {
-    lista.innerHTML = "<p>No hay productos en esta línea.</p>";
+      lista.innerHTML = "<p>No hay productos en esta línea.</p>";
   } else {
-    filtrados.forEach(p => {
-      const div = document.createElement("div");
-      div.className = "producto";
-      div.textContent = p.descripcion;
-      div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
-      lista.appendChild(div);
-    });
+      filtrados.forEach(p => {
+          const div = document.createElement("div");
+          div.className = "producto";
+          div.textContent = p.descripcion;
+          div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
+          lista.appendChild(div);
+      });
   }
 
   document.getElementById("tituloProductos").textContent = linea;
   document.getElementById("productos").style.display = "block";
 }
 
-// === Popup de cantidad ===
+// ----------------------------------------------------
+// Popup de cantidad
+// ----------------------------------------------------
 let productoSeleccionado = null;
+
 function agregarCantidad(nombre, codigo) {
   productoSeleccionado = { nombre, codigo };
   document.getElementById("nombreProductoSeleccionado").textContent = nombre;
   document.getElementById("inputCantidad").value = '';
   document.getElementById("popupCantidad").style.display = "block";
 }
+
 function cerrarPopup() {
   document.getElementById("popupCantidad").style.display = "none";
 }
+
 function confirmarCantidad() {
   const cantidad = parseInt(document.getElementById("inputCantidad").value);
   if (isNaN(cantidad) || cantidad <= 0) return alert("Cantidad inválida.");
-  const nombre = productoSeleccionado.nombre;
-  const codigo = productoSeleccionado.codigo;
+
   let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
-  carrito.push({ nombre, codigo, cantidad });
+  carrito.push({
+      nombre: productoSeleccionado.nombre,
+      codigo: productoSeleccionado.codigo,
+      cantidad
+  });
+
   localStorage.setItem("carrito", JSON.stringify(carrito));
+
   cerrarPopup();
   window.location.href = "pantalla3.html";
 }
@@ -264,17 +260,15 @@ window.cerrarPopup = cerrarPopup;
 window.confirmarCantidad = confirmarCantidad;
 window.agregarCantidad = agregarCantidad;
 
-// === 🔄 Botón para actualizar manualmente
+// Botón actualizar
 document.getElementById("btnActualizar").onclick = () => {
   localStorage.removeItem("cacheProductosZapata");
   cargarProductos(true);
 };
 
-// 🚀 Carga inicial (usa cache si existe)
+// Cargar inicial
 cargarProductos();
 </script>
+
 </body>
 </html>
-
-
-
