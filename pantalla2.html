@@ -149,50 +149,46 @@ async function cargarProductos(forzar = false) {
   lineasUnicas.clear();
 
 for (const d of snap.docs) {
-  const data = d.data();
-  const fecha = data.fechaCreacion ? new Date(data.fechaCreacion) : null;
-  const esReciente = fecha ? fecha >= fechaFiltro : true;
-  if (!esReciente) continue;
+    const data = d.data();
 
-  // --- Si tiene conceptos_detalle ---
-  if (Array.isArray(data.conceptos_detalle)) {
-    for (const c of data.conceptos_detalle) {
-      const codigo = String(c.productoId || c.codigoSAT || "").trim();
-      if (!codigo || vistos.has(codigo)) continue;
-      vistos.add(codigo);
-      let desc = (c.descripcion || c.productoInterno || "").trim();
-      if (!desc) desc = await buscarDescripcion(codigo);
-      if (!desc) continue;
-      const linea = (data.linea || "").trim().toUpperCase();
-      if (!linea) continue;
+    let linea = (data.linea || "").trim().toUpperCase();
+    if (!linea) linea = "SIN LÍNEA";
 
-      // evita duplicados por código o descripción
-      if (!productos.some(p => p.codigo === codigo || p.descripcion === desc)) {
-        productos.push({ codigo, descripcion: desc, linea });
-        lineasUnicas.add(linea);
-      }
+    // -------- 1) LEER OBJETO [4] SI EXISTE --------
+    if (data[4]) {
+        const obj = data[4];
+
+        let cod2 = "";
+        if (obj.codigobarras) cod2 = String(obj.codigobarras).trim();
+        else if (obj.codigoBarra) cod2 = String(obj.codigoBarra).trim();
+
+        if (cod2 && !productos.some(p => p.codigo === cod2)) {
+            let desc2 = (obj.descripcion || "").trim();
+            if (!desc2) desc2 = await buscarDescripcion(cod2);
+
+            if (desc2) {
+                productos.push({ codigo: cod2, descripcion: desc2, linea });
+                lineasUnicas.add(linea);
+            }
+        }
     }
-  } // 👈 ESTA LLAVE FALTABA AQUÍ
 
-  // --- Si es un documento directo ---
-  const codigo = String(data.codigo || "").trim();
-  if (codigo && !vistos.has(codigo)) {
-    vistos.add(codigo);
-    let desc = (data.descripcion || "").trim();
-    if (!desc) desc = await buscarDescripcion(codigo);
-    if (!desc) continue;
-    const linea = (data.linea || "").trim().toUpperCase();
-    if (!linea) continue;
+    // -------- 2) LEER CODIGO A NIVEL RAÍZ --------
+    let codigo = "";
+    if (data.codigo) codigo = String(data.codigo).trim();
+    else if (data.codigobarras) codigo = String(data.codigobarras).trim();
+    else if (data.codigoBarra) codigo = String(data.codigoBarra).trim();
 
-    // evita duplicados por código o descripción
-    if (!productos.some(p => p.codigo === codigo || p.descripcion === desc)) {
-      productos.push({ codigo, descripcion: desc, linea });
-      lineasUnicas.add(linea);
+    if (codigo) {
+        let descripcion = (data.descripcion || "").trim();
+        if (!descripcion) descripcion = await buscarDescripcion(codigo);
+
+        if (descripcion && !productos.some(p => p.codigo === codigo)) {
+            productos.push({ codigo, descripcion, linea });
+            lineasUnicas.add(linea);
+        }
     }
-  }
-}
-
-
+} // 👈 ESTA LLAVE FALTABA (CIERRA EL FOR)
   // 💾 Guarda cache local
   localStorage.setItem("cacheProductosZapata", JSON.stringify(productos));
   console.log("💾 Cache actualizado con", productos.length, "productos");
@@ -279,5 +275,6 @@ cargarProductos();
 </script>
 </body>
 </html>
+
 
 
