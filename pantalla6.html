@@ -265,7 +265,7 @@ function verificarCinchoYGuardar() {
 };
 
     try {
-      await db.collection("almacenes").doc("almacen_zapata").collection("salidas").add(salida);
+     await db.collection("almacenes").doc("almacen_zapata").collection("salidas1.0").add(salida);
       await db.collection("consecutivos").doc("salidas_zapata").set({ ultimo: firebase.firestore.FieldValue.increment(1) }, { merge: true });
 
 
@@ -452,3 +452,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 </div>
 </body>
 </html>
+
