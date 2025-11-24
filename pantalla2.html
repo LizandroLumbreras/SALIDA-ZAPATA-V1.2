@@ -89,15 +89,14 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, getDoc, doc }
+import { getFirestore, collection, getDocs }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === FIREBASE CONFIG ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
   projectId: "inventariopv-643f1",
-  storageBucket: "inventariopv-643f1.firebasestorage.app",
+  storageBucket: "inventariopv-643f1.appspot.com",
   messagingSenderId: "96242533231",
   appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
 };
@@ -108,97 +107,74 @@ const db = getFirestore(app);
 let productos = [];
 let lineasUnicas = new Set();
 
-// ----------------------------------------------------
-// Buscar descripción externa si no viene en productos[]
-// ----------------------------------------------------
-async function buscarDescripcion(codigo) {
-  try {
-    const ref = doc(db, "productos", codigo);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      const data = snap.data();
-      return data.descripcion || data.nombre || "";
-    }
-  } catch (e) {}
-  return "";
-}
-
-// ----------------------------------------------------
-// Cargar productos desde Firestore
-// ----------------------------------------------------
-async function cargarProductos(forzar = false) {
-  const loader = document.getElementById("loader");
-  loader.style.display = "block";
+// =============================
+//   CARGAR PRODUCTOS REALES
+// =============================
+async function cargarProductos() {
+  document.getElementById("loader").style.display = "block";
 
   productos = [];
   lineasUnicas.clear();
 
-  console.log("📡 Descargando desde Firestore...");
-
-  const colRef = collection(db, "almacenes", "almacen_zapata", "entradas");
+  const colRef = collection(db, "productos");
   const snap = await getDocs(colRef);
 
   for (const d of snap.docs) {
-      const data = d.data();
+    const data = d.data();
 
-      // 💥 TU ESTRUCTURA REAL: productos[]
-      if (Array.isArray(data.productos)) {
+    // 1. Aceptar solo los ACTIVO = true
+    if (data.activo !== true) continue;
 
-          for (const p of data.productos) {
+    // 2. Validar proveedor
+    let proveedor = (data.proveedor || "").trim();
+    if (!proveedor) continue;
 
-              let codigo = "";
-              if (p.codigobarras) codigo = String(p.codigobarras).trim();
-              else if (p.codigoBarra) codigo = String(p.codigoBarra).trim();
+    proveedor = proveedor.toUpperCase();
 
-              if (!codigo) continue;
+    // 3. Código
+    let codigo = data.codigoBarra || d.id;
+    if (!codigo) continue;
+    codigo = String(codigo).trim();
 
-              let descripcion = (p.descripcion || "").trim();
-              if (!descripcion) descripcion = await buscarDescripcion(codigo);
-              if (!descripcion) continue;
+    // 4. Descripción real
+    let descripcion = (data.concepto || data.descripcion || "").trim();
+    if (!descripcion) continue;
 
-              let linea = (p.linea || "").trim().toUpperCase();
-              if (!linea) linea = "SIN LÍNEA";
+    // 5. Agregar
+    productos.push({
+      codigo,
+      descripcion,
+      linea: proveedor
+    });
 
-              if (!productos.some(x => x.codigo === codigo)) {
-                  productos.push({ codigo, descripcion, linea });
-                  lineasUnicas.add(linea);
-              }
-          }
-      }
+    lineasUnicas.add(proveedor);
   }
 
-  // Guardar cache
   localStorage.setItem("cacheProductosZapata", JSON.stringify(productos));
-  console.log("💾 Cache actualizado con", productos.length, "productos");
 
-  loader.style.display = "none";
+  document.getElementById("loader").style.display = "none";
   mostrarLineas();
 }
 
-// ----------------------------------------------------
-// Mostrar tarjetas con las líneas
-// ----------------------------------------------------
+// =============================
+//   MOSTRAR LÍNEAS (PROVEEDOR)
+// =============================
 function mostrarLineas() {
   const cont = document.getElementById("lineasContainer");
   cont.innerHTML = "";
 
-  if (lineasUnicas.size === 0) {
-      cont.innerHTML = "<p>No hay productos con línea definida o recientes.</p>";
-      return;
-  }
-
   [...lineasUnicas].sort().forEach(linea => {
-      const div = document.createElement("div");
-      div.className = "tarjeta";
-      div.textContent = linea;
-      div.onclick = () => mostrarProductos(linea);
-      cont.appendChild(div);
+    const div = document.createElement("div");
+    div.className = "tarjeta";
+    div.textContent = linea;
+    div.onclick = () => mostrarProductos(linea);
+    cont.appendChild(div);
   });
 }
 
-// ----------------------------------------------------
-// Mostrar productos por línea
-// ----------------------------------------------------
+// =============================
+//   MOSTRAR PRODUCTOS POR LÍNEA
+// =============================
 function mostrarProductos(linea) {
   document.getElementById("pantalla").style.display = "none";
 
@@ -207,25 +183,21 @@ function mostrarProductos(linea) {
 
   const filtrados = productos.filter(p => p.linea === linea);
 
-  if (filtrados.length === 0) {
-      lista.innerHTML = "<p>No hay productos en esta línea.</p>";
-  } else {
-      filtrados.forEach(p => {
-          const div = document.createElement("div");
-          div.className = "producto";
-          div.textContent = p.descripcion;
-          div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
-          lista.appendChild(div);
-      });
-  }
+  filtrados.forEach(p => {
+    const div = document.createElement("div");
+    div.className = "producto";
+    div.textContent = p.descripcion;
+    div.onclick = () => agregarCantidad(p.descripcion, p.codigo);
+    lista.appendChild(div);
+  });
 
   document.getElementById("tituloProductos").textContent = linea;
   document.getElementById("productos").style.display = "block";
 }
 
-// ----------------------------------------------------
-// Popup de cantidad
-// ----------------------------------------------------
+// =================================
+//       POPUP DE CANTIDAD
+// =================================
 let productoSeleccionado = null;
 
 function agregarCantidad(nombre, codigo) {
@@ -245,9 +217,9 @@ function confirmarCantidad() {
 
   let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
   carrito.push({
-      nombre: productoSeleccionado.nombre,
-      codigo: productoSeleccionado.codigo,
-      cantidad
+    nombre: productoSeleccionado.nombre,
+    codigo: productoSeleccionado.codigo,
+    cantidad
   });
 
   localStorage.setItem("carrito", JSON.stringify(carrito));
@@ -260,15 +232,11 @@ window.cerrarPopup = cerrarPopup;
 window.confirmarCantidad = confirmarCantidad;
 window.agregarCantidad = agregarCantidad;
 
-// Botón actualizar
-document.getElementById("btnActualizar").onclick = () => {
-  localStorage.removeItem("cacheProductosZapata");
-  cargarProductos(true);
-};
+// BOTÓN ACTUALIZAR
+document.getElementById("btnActualizar").onclick = () => cargarProductos();
 
-// Cargar inicial
+// CARGA INICIAL
 cargarProductos();
 </script>
-
 </body>
 </html>
