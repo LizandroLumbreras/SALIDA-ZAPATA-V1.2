@@ -107,8 +107,45 @@ const db = getFirestore(app);
 let productos = [];
 let lineasUnicas = new Set();
 
+const CACHE_KEY = "cacheProductosZapata";
+const CACHE_TIME_KEY = "cacheProductosZapata_time";
+const CACHE_EXPIRA_MS = 24 * 60 * 60 * 1000; // 24 horas
+
+// ================================================
+//     CARGAR DESDE CACHE (SI EXISTE Y NO EXPIRA)
+// ================================================
+function cargarDesdeCache() {
+  const cache = localStorage.getItem(CACHE_KEY);
+  const time = localStorage.getItem(CACHE_TIME_KEY);
+
+  if (!cache || !time) return false;
+
+  const tiempoGuardado = Number(time);
+  const ahora = Date.now();
+
+  if (ahora - tiempoGuardado > CACHE_EXPIRA_MS) return false;
+
+  try {
+    productos = JSON.parse(cache);
+    lineasUnicas = new Set(productos.map(p => p.linea));
+    document.getElementById("loader").style.display = "none";
+    mostrarLineas();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // =============================
-//   CARGAR PRODUCTOS REALES
+//   GUARDAR EN CACHE
+// =============================
+function guardarEnCache() {
+  localStorage.setItem(CACHE_KEY, JSON.stringify(productos));
+  localStorage.setItem(CACHE_TIME_KEY, Date.now());
+}
+
+// =============================
+//   CARGAR PRODUCTOS FIREBASE
 // =============================
 async function cargarProductos() {
   document.getElementById("loader").style.display = "block";
@@ -122,25 +159,20 @@ async function cargarProductos() {
   for (const d of snap.docs) {
     const data = d.data();
 
-    // 1. Aceptar solo los ACTIVO = true
     if (data.activo !== true) continue;
 
-    // 2. Validar proveedor
     let proveedor = (data.proveedor || "").trim();
     if (!proveedor) continue;
 
     proveedor = proveedor.toUpperCase();
 
-    // 3. Código
     let codigo = data.codigoBarra || d.id;
     if (!codigo) continue;
     codigo = String(codigo).trim();
 
-    // 4. Descripción real
     let descripcion = (data.concepto || data.descripcion || "").trim();
     if (!descripcion) continue;
 
-    // 5. Agregar
     productos.push({
       codigo,
       descripcion,
@@ -150,7 +182,7 @@ async function cargarProductos() {
     lineasUnicas.add(proveedor);
   }
 
-  localStorage.setItem("cacheProductosZapata", JSON.stringify(productos));
+  guardarEnCache();
 
   document.getElementById("loader").style.display = "none";
   mostrarLineas();
@@ -232,11 +264,22 @@ window.cerrarPopup = cerrarPopup;
 window.confirmarCantidad = confirmarCantidad;
 window.agregarCantidad = agregarCantidad;
 
-// BOTÓN ACTUALIZAR
-document.getElementById("btnActualizar").onclick = () => cargarProductos();
+// =====================================
+// BOTÓN ACTUALIZAR (LIMPIA EL CACHE)
+// =====================================
+document.getElementById("btnActualizar").onclick = () => {
+  localStorage.removeItem(CACHE_KEY);
+  localStorage.removeItem(CACHE_TIME_KEY);
+  cargarProductos();
+};
 
-// CARGA INICIAL
-cargarProductos();
+// =====================================
+//          CARGA INICIAL
+// =====================================
+if (!cargarDesdeCache()) {
+  cargarProductos();
+}
 </script>
 </body>
 </html>
+
