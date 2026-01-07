@@ -177,21 +177,31 @@ if (!folio) {
   document.getElementById("folio").textContent = "SIN FOLIO";
 }
 
-  function imprimirYDescargar() {
-    const elemento = document.querySelector(".resumen");
-    const originalBackground = elemento.style.background;
-    elemento.style.background = "white";
-    html2canvas(elemento, { scale: 2 }).then(canvas => {
-      const link = document.createElement("a");
-      link.download = `${document.getElementById("folio").textContent || "salida"}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-      setTimeout(() => {
-        window.print();
-        elemento.style.background = originalBackground;
-      }, 500);
-    });
-  }
+function imprimirYDescargar() {
+  const elemento = document.querySelector(".resumen");
+  const originalBackground = elemento.style.background;
+  elemento.style.background = "white";
+
+  html2canvas(elemento, {
+    scale: 4,               // 🔥 CLAVE: más resolución
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+    windowWidth: elemento.scrollWidth,
+    windowHeight: elemento.scrollHeight
+  }).then(canvas => {
+
+    const link = document.createElement("a");
+    link.download = `${document.getElementById("folio").textContent || "salida"}.png`;
+    link.href = canvas.toDataURL("image/png", 1.0); // sin compresión
+    link.click();
+
+    setTimeout(() => {
+      window.print();
+      elemento.style.background = originalBackground;
+    }, 400);
+  });
+}
 // --- Configuración global de bots Telegram ---
 const BOT_ALIKA = "8241239653:AAH3-eS7XrRlO4G6LO5MydlYlOm2Um18SGE"; // AlikaInvCritic_bot
 const CHAT_ALIKA = "6617988297"; // Chat GERA (inventarios y alertas)
@@ -452,4 +462,5 @@ document.addEventListener("DOMContentLoaded", async () => {
 </div>
 </body>
 </html>
+
 
