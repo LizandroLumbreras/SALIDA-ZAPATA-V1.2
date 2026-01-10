@@ -46,7 +46,11 @@
     font-size: 15px;
     text-align: center;
   }
-
+.resumen {
+  image-rendering: optimizeQuality;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
   ul {
     padding-left: 10px;
   }
@@ -55,7 +59,10 @@
     max-width: 100%;
     height: auto;
   }
-
+li {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
   /* 🔹 Aumento de nitidez de firmas */
   .firmas-vertical img {
     width: 95%;
@@ -180,21 +187,30 @@ if (!folio) {
 function imprimirYDescargar() {
   const elemento = document.querySelector(".resumen");
   const originalBackground = elemento.style.background;
-  elemento.style.background = "white";
+  elemento.style.background = "#ffffff";
+
+  const dpi = window.devicePixelRatio || 2;
 
   html2canvas(elemento, {
-    scale: 4,               // 🔥 CLAVE: más resolución
+    scale: dpi * 2,              // 🔥 CLAVE REAL
     useCORS: true,
     backgroundColor: "#ffffff",
     logging: false,
+    imageTimeout: 0,
+    scrollX: 0,
+    scrollY: -window.scrollY,
     windowWidth: elemento.scrollWidth,
     windowHeight: elemento.scrollHeight
   }).then(canvas => {
 
-    const link = document.createElement("a");
-    link.download = `${document.getElementById("folio").textContent || "salida"}.png`;
-    link.href = canvas.toDataURL("image/png", 1.0); // sin compresión
-    link.click();
+    // 🔹 Forzar PNG sin compresión
+    canvas.toBlob(blob => {
+      const link = document.createElement("a");
+      link.download = `${document.getElementById("folio").textContent || "salida"}.png`;
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }, "image/png", 1.0);
 
     setTimeout(() => {
       window.print();
@@ -462,5 +478,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 </div>
 </body>
 </html>
+
 
 
