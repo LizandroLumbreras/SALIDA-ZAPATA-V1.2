@@ -178,17 +178,31 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    async function cargarFolio() {
-  const docRef = db.collection("consecutivos").doc("salidas_zapata");
-  const docSnap = await docRef.get();
-  let numero = 1;
-  if (docSnap.exists) {
-    numero = docSnap.data().ultimo || 1;
-  }
-  const folioFinal = "PDDZAP - " + String(numero).padStart(4, "0");
+function cargarFolio() {
+
+  const ahora = new Date();
+
+  const yyyy = ahora.getFullYear();
+
+  const mm = String(ahora.getMonth() + 1).padStart(2, "0");
+
+  const dd = String(ahora.getDate()).padStart(2, "0");
+
+  const hh = String(ahora.getHours()).padStart(2, "0");
+
+  const min = String(ahora.getMinutes()).padStart(2, "0");
+
+  const ss = String(ahora.getSeconds()).padStart(2, "0");
+
+  const ms = String(ahora.getMilliseconds()).padStart(3, "0");
+
+  const folioFinal =
+    `PDDZAP-${yyyy}${mm}${dd}-${hh}${min}${ss}${ms}`;
+
   document.getElementById("proximoFolio").textContent = folioFinal;
 
-  // ✅ Guarda el folio real de Firebase en localStorage
+  // 🔥 guardar para siguientes pantallas
+  localStorage.setItem("folio_zapata", folioFinal);
 }
 
     function ponerFechaHoy() {
