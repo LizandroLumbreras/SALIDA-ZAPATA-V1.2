@@ -170,16 +170,35 @@ li {
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  let folio = "";
-  let numeroFolio = 0;
+let folio = "";
 
-  async function obtenerFolioDesdeFirebase() {
-    const ref = db.collection("consecutivos").doc("salidas_zapata");
-    const snap = await ref.get();
-    numeroFolio = (snap.exists ? (snap.data().ultimo || 0) : 0) + 1;
-    folio = "PDDZAP - " + String(numeroFolio).padStart(4, "0");
-    document.getElementById("folio").textContent = folio;
-  }
+function obtenerFolioAutomatico() {
+
+  const ahora = new Date();
+
+  const yyyy = ahora.getFullYear();
+
+  const mm = String(ahora.getMonth() + 1).padStart(2, "0");
+
+  const dd = String(ahora.getDate()).padStart(2, "0");
+
+  const hh = String(ahora.getHours()).padStart(2, "0");
+
+  const min = String(ahora.getMinutes()).padStart(2, "0");
+
+  const ss = String(ahora.getSeconds()).padStart(2, "0");
+
+  const ms = String(ahora.getMilliseconds()).padStart(3, "0");
+
+  folio =
+    `PDDZAP-${yyyy}${mm}${dd}-${hh}${min}${ss}${ms}`;
+
+  document.getElementById("folio").textContent = folio;
+
+  localStorage.setItem("folio_zapata", folio);
+
+  return folio;
+}
 if (!folio) {
   document.getElementById("folio").textContent = "SIN FOLIO";
 }
@@ -271,8 +290,13 @@ function verificarCinchoYGuardar() {
   }
 }
 
-  async function guardarEnFirebase() {
-    await obtenerFolioDesdeFirebase();
+async function guardarEnFirebase() {
+
+  obtenerFolioAutomatico();
+
+  document.getElementById("folio").textContent = folioGuardado;
+
+  await new Promise(resolve => setTimeout(resolve, 200));
 
     const fecha = localStorage.getItem("resumenFecha") || new Date().toLocaleString("es-MX");
     const entrega = localStorage.getItem("entrega") || "";
@@ -284,15 +308,15 @@ function verificarCinchoYGuardar() {
     const folioCincho = localStorage.getItem("folioCincho") || "";
 
    const salida = { 
-  folio, fecha, entrega, recibe, destino, 
+  folio: folioGuardado, fecha, entrega, recibe, destino, 
   folioCincho, // 👈 nuevo campo
   firmaEntrega, firmaRecibe, articulos, 
-  timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+  timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+createdAt: new Date().toISOString()
 };
 
     try {
      await db.collection("almacenes").doc("almacen_zapata").collection("salidas1.0").add(salida);
-      await db.collection("consecutivos").doc("salidas_zapata").set({ ultimo: firebase.firestore.FieldValue.increment(1) }, { merge: true });
 
 
 for (const art of articulos) {
@@ -412,7 +436,7 @@ console.log(esCritico ? "🚨 Enviado alerta crítica" : "📊 Actualización no
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    await obtenerFolioDesdeFirebase();
+    const folioGuardado = obtenerFolioAutomatico();
   } catch (e) {
     console.warn("Error al obtener folio:", e);
     document.getElementById("folio").textContent = "ERROR AL CARGAR FOLIO";
