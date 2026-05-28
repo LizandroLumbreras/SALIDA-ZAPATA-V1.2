@@ -292,9 +292,11 @@ function verificarCinchoYGuardar() {
 
 async function guardarEnFirebase() {
 
-  const folioGuardado = obtenerFolioAutomatico();
+  const folioGuardado =
+    localStorage.getItem("folio_zapata");
 
-  document.getElementById("folio").textContent = folioGuardado;
+  document.getElementById("folio").textContent =
+    folioGuardado || "SIN FOLIO";
 
   await new Promise(resolve => setTimeout(resolve, 200));
     const fecha = localStorage.getItem("resumenFecha") || new Date().toLocaleString("es-MX");
@@ -435,7 +437,8 @@ console.log(esCritico ? "🚨 Enviado alerta crítica" : "📊 Actualización no
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    obtenerFolioAutomatico();
+  document.getElementById("folio").textContent =
+  localStorage.getItem("folio_zapata") || "SIN FOLIO";
   } catch (e) {
     console.warn("Error al obtener folio:", e);
     document.getElementById("folio").textContent = "ERROR AL CARGAR FOLIO";
