@@ -214,18 +214,43 @@ function cargarFolio() {
   document.getElementById("fecha").value = fecha;
   localStorage.setItem("fecha", fecha); // ✅ aquí guardas
 }
- function continuar() {
-  const entrega = document.getElementById("entrega").value;
-  const recibe = document.getElementById("recibe").value;
-  const destino = document.getElementById("destino").value;
-    if (!entrega || !recibe || !destino) {
+function continuar() {
+
+  const entrega =
+    document.getElementById("entrega").value;
+
+  const recibe =
+    document.getElementById("recibe").value;
+
+  const destino =
+    document.getElementById("destino").value;
+
+  if (!entrega || !recibe || !destino) {
+
     alert("Por favor completa todos los campos.");
+
     return;
+
   }
-   localStorage.setItem("entrega", entrega);
-localStorage.setItem("recibe", recibe);
-localStorage.setItem("destino", destino);
-   window.location.href = "pantalla2.html";
+
+  // 🔥 TOMAR EL FOLIO ACTUAL VISUAL
+  const folioActual =
+    document.getElementById("proximoFolio").textContent;
+
+  // 🔥 GUARDAR FOLIO DEFINITIVO
+  localStorage.setItem(
+    "folio_zapata",
+    folioActual
+  );
+
+  localStorage.setItem("entrega", entrega);
+
+  localStorage.setItem("recibe", recibe);
+
+  localStorage.setItem("destino", destino);
+
+  window.location.href = "pantalla2.html";
+
 }
 
 
